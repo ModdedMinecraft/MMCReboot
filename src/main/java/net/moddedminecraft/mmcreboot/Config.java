@@ -49,14 +49,14 @@ public class Config {
             plugin.defaultConfFile.createNewFile();
         }
 
-        restartEnabled = check(config.getNode("autorestart", "enabled"), true, "").getBoolean();
-        restartInterval = check(config.getNode("autorestart", "interval"), 6, "").getInt();
-        timerBroadcast = checkList(config.getNode("timer", "broadcast"), timerBroadcastList, "").getList(TypeToken.of(Double.class));
-        timerRevote =  check(config.getNode("timer", "re-vote"), 10, "").getInt();
-        timerStartvote = check(config.getNode("timer", "start-vote"), 60, "").getInt();
-        timerVotepercent = check(config.getNode("timer", "vote-percent"), 10, "").getInt();
-        timerMinplayers = check(config.getNode("timer", "min-players"), 5, "").getInt();
-        voteEnabled = check(config.getNode("voting", "enabled"), true, "").getBoolean();
+        restartEnabled = check(config.getNode("autorestart", "enabled"), true, "Enable / Disable automatic restarts after the designated interval time.").getBoolean();
+        restartInterval = check(config.getNode("autorestart", "interval"), 6, "How long in hours should the auto restart timer be set for?").getInt();
+        timerBroadcast = checkList(config.getNode("timer", "broadcast"), timerBroadcastList, "warning times before reboot in minutes (0.5 = 30 seconds)").getList(TypeToken.of(Double.class));
+        timerRevote =  check(config.getNode("timer", "re-vote"), 10, "Time before another vote to restart can begin. (In minutes)  ").getInt();
+        timerStartvote = check(config.getNode("timer", "start-vote"), 60, "How long should it be before players are allowed to start a vote after the server has restarted (In minutes) ").getInt();
+        timerVotepercent = check(config.getNode("timer", "vote-percent"), 60, "% of online players to vote yes before a restart is triggered.").getInt();
+        timerMinplayers = check(config.getNode("timer", "min-players"), 5, "The required amount of players online to start a vote ").getInt();
+        voteEnabled = check(config.getNode("voting", "enabled"), true, "Enable or Disable the ability for players to vote for a server restart").getBoolean();
 
         loader.save(config);
     }
