@@ -1,4 +1,6 @@
-package net.moddedminecraft.mmcessentials;
+package net.moddedminecraft.mmcreboot.Tasks;
+
+import net.moddedminecraft.mmcreboot.Main;
 
 import java.util.TimerTask;
 
