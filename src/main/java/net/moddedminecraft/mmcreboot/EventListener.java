@@ -19,8 +19,6 @@ public class EventListener {
 
     @Listener
     public void onPlayerLogin(ClientConnectionEvent.Join event, @Root Player player) throws IOException, ObjectMappingException {
-        plugin.playersOnline = Sponge.getServer().getOnlinePlayers().size();
-
         if (plugin.voteStarted) {
             Sponge.getScheduler().createTaskBuilder().execute(new Runnable() {
                 public void run() {
@@ -32,11 +30,6 @@ public class EventListener {
                 }
             }).delay(10, TimeUnit.SECONDS).name("mmcreboot-s-sendVoteOnLogin").submit(this);
         }
-    }
-
-    @Listener
-    public void onPlayerDisconnect(ClientConnectionEvent.Disconnect event, @Root Player player) throws IOException, ObjectMappingException {
-        plugin.playersOnline = Sponge.getServer().getOnlinePlayers().size();
     }
 
 }

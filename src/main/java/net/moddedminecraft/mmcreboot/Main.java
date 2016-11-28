@@ -64,7 +64,6 @@ public class Main {
     public int noVotes = 0;
     public ArrayList<Player> hasVoted = new ArrayList<Player>();
 
-    public static int playersOnline;
     public int voteSeconds;
     public String reason;
 
