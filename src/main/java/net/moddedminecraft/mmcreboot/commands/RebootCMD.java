@@ -44,7 +44,7 @@ public class RebootCMD implements CommandExecutor {
             return CommandResult.success();
         }
 
-        plugin.logger.info("[MMCReboot] " + src.toString() + " is setting a new restart time...");
+        plugin.logger.info("[MMCReboot] " + src.getName() + " is setting a new restart time...");
 
         if(Config.restartEnabled) {
             plugin.cancelTasks();
