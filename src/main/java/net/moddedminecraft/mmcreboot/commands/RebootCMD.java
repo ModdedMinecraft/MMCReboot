@@ -39,9 +39,8 @@ public class RebootCMD implements CommandExecutor {
         } else if(timeValue.equals("s")) {
             restartTime = timeAmount;
         } else {
-            plugin.sendMessage(src, "&cInvalid time scale!");
             plugin.sendMessage(src, "&bUse 'h' for time in hours, 'm' for minutes and 's' for seconds");
-            return CommandResult.success();
+            throw new CommandException(plugin.fromLegacy("&cInvalid time scale!"));
         }
 
         plugin.logger.info("[MMCReboot] " + src.getName() + " is setting a new restart time...");

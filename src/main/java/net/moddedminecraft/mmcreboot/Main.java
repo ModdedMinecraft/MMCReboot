@@ -370,7 +370,7 @@ public class Main {
         sender.sendMessage(fromLegacy(message));
     }
 
-    private Text fromLegacy(String legacy) {
+    public Text fromLegacy(String legacy) {
         return TextSerializers.FORMATTING_CODE.deserializeUnchecked(legacy);
     }
 }

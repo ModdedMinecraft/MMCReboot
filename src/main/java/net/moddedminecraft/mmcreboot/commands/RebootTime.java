@@ -18,8 +18,7 @@ public class RebootTime implements CommandExecutor {
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         if(!Config.restartEnabled) {
-            plugin.sendMessage(src, "&cThere is no auto-restart scheduled!");
-            return CommandResult.success();
+            throw new CommandException(plugin.fromLegacy("&cThere is no auto-restart scheduled!"));
         }
 
         double timeLeft = (Config.restartInterval * 3600) - ((double)(System.currentTimeMillis() - plugin.startTimestamp) / 1000);
