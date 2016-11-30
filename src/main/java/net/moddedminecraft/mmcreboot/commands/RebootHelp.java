@@ -1,14 +1,17 @@
 package net.moddedminecraft.mmcreboot.commands;
 
-import net.moddedminecraft.mmcreboot.Helplist;
 import net.moddedminecraft.mmcreboot.Main;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.service.pagination.PaginationService;
+import org.spongepowered.api.text.Text;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class RebootHelp implements CommandExecutor {
 
@@ -24,30 +27,23 @@ public class RebootHelp implements CommandExecutor {
     }
 
     void showHelp(CommandSource sender) {
-        plugin.sendMessage(sender, "&f--- &3Reboot &bHelp &f---");
+        PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
 
-        ArrayList<Helplist> helpList = new ArrayList<Helplist>();
+        List<Text> contents = new ArrayList<>();
+        contents.add(plugin.fromLegacy("&3/reboot &bhelp - &7shows this help"));
+        if (sender.hasPermission("mmcreboot.reboot.now")) contents.add(plugin.fromLegacy("&3/reboot &bnow - &7restarts the server instantly"));
+        if (sender.hasPermission("mmcreboot.reboot.start")) contents.add(plugin.fromLegacy("&3/reboot start &7[&bh&7|&bm&7|&bs&7] &7[&btime&7] &7(&breason&7) &b- &7restart the server after a given time"));
+        if (sender.hasPermission("mmcreboot.reboot.cancel")) contents.add(plugin.fromLegacy("&3/reboot &bcancel - &7cancel any current restart timer"));
+        if (sender.hasPermission("mmcreboot.reboot.vote")) contents.add(plugin.fromLegacy("&3/reboot &bvote - &7starts a vote to restart the server"));
+        contents.add(plugin.fromLegacy("&3/reboot &btime - &7informs you how much time is left before restarting"));
+        contents.add(plugin.fromLegacy("&3/reboot &bvote yes - &7vote yes to restart the server"));
+        contents.add(plugin.fromLegacy("&3/reboot &bvote no - &7vote no to restart the server"));
 
-        helpList.add(new Helplist("&3[] = required  () = optional"));
-        helpList.add(new Helplist("&3/reboot &bhelp - &7shows this help"));
-
-        if (sender.hasPermission("mmcreboot.reboot.now")) {
-            helpList.add(new Helplist("&3/reboot &bnow - &7restarts the server instantly"));
-        } if (sender.hasPermission("mmcreboot.reboot.start")) {
-            helpList.add(new Helplist("&3/reboot start &7[&bh&7|&bm&7|&bs&7] &f[time] (reason) - &7restart the server after a given time"));
-        } if (sender.hasPermission("mmcreboot.reboot.cancel")) {
-            helpList.add(new Helplist("&3/reboot &bcancel - &7cancel any current restart timer"));
-        } if (sender.hasPermission("mmcreboot.reboot.vote")) {
-            helpList.add(new Helplist("&3/reboot &bvote - &7starts a vote to restart the server"));
-        }
-
-        helpList.add(new Helplist("&3/reboot &btime - &7informs you how much time is left before restarting"));
-        helpList.add(new Helplist("&3/reboot &bvote yes - &7vote yes to restart the server"));
-        helpList.add(new Helplist("&3/reboot &bvote no - &7vote no to restart the server"));
-
-        for(int i = 0; i < helpList.size(); i++) {
-            plugin.sendMessage(sender, helpList.get(i).command);
-
-        }
+        paginationService.builder()
+                .title(plugin.fromLegacy("&6MMCReboot Help"))
+                .contents(contents)
+                .header(plugin.fromLegacy("&3[] = required  () = optional"))
+                .padding(Text.of("="))
+                .sendTo(sender);
     }
 }
