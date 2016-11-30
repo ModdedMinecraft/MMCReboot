@@ -102,7 +102,6 @@ public class Main {
         if (Config.voteEnabled) {
             justStartedTimer = new Timer();
             this.justStartedTimer.schedule(new TimerTask() {
-                @Override
                 public void run() {
                     justStarted = false;
                 }
@@ -110,17 +109,9 @@ public class Main {
         }
 
 
-        Sponge.getScheduler().createTaskBuilder().execute(new Runnable() {
-            public void run() {
-                action();
-            }
-        }).delay(250, TimeUnit.MILLISECONDS).interval(500,TimeUnit.MILLISECONDS).name("mmcreboot-s-sendAction").submit(this);
+        Sponge.getScheduler().createTaskBuilder().execute(this::action).delay(250, TimeUnit.MILLISECONDS).interval(500,TimeUnit.MILLISECONDS).name("mmcreboot-s-sendAction").submit(this);
 
-        Sponge.getScheduler().createTaskBuilder().execute(new Runnable() {
-            public void run() {
-                reduceVote();
-            }
-        }).interval(1,TimeUnit.SECONDS).name("mmcreboot-s-reduceVoteCount").submit(this);
+        Sponge.getScheduler().createTaskBuilder().execute(this::reduceVote).interval(1,TimeUnit.SECONDS).name("mmcreboot-s-reduceVoteCount").submit(this);
 
         logger.info("MMCReboot Loaded");
     }
@@ -220,7 +211,7 @@ public class Main {
 
     public void scheduleTasks() {
         cancelTasks();
-        if (Config.timerBroadcast !=null) {
+        if (Config.timerBroadcast != null) {
             Config.timerBroadcast.stream().filter(aTimerBroadcast -> Config.restartInterval * 60 - aTimerBroadcast > 0).forEach(aTimerBroadcast -> {
                 Timer warnTimer = new Timer();
                 warningTimers.add(warnTimer);

@@ -27,18 +27,20 @@ public class RebootVote implements CommandExecutor {
 
         if (optional.isPresent()) {
             String op = optional.get();
-            if (op.equals("on") && src.hasPermission("mmcreboot.reboot.vote.toggle")) {
+            if (op.equals("on") && src.hasPermission("mmcreboot.reboot.toggle.vote")) {
                 Config.voteEnabled = true;
                 Config.config.getNode("voting", "enabled").setValue("true");
+                return CommandResult.success();
             }
-            if (op.equals("off") && src.hasPermission("mmcreboot.reboot.vote.toggle")) {
+            if (op.equals("off") && src.hasPermission("mmcreboot.reboot.toggle.vote")) {
                 Config.voteEnabled = false;
                 Config.config.getNode("voting", "enabled").setValue("false");
+                return CommandResult.success();
             }
             if (op.equals("yes")) {
                 if (plugin.hasVoted.contains(src)) {
                     plugin.sendMessage(src, "&4You have already voted!");
-                    return CommandResult.success();
+                    return CommandResult.empty();
                 } else if (plugin.voteStarted) {
                     plugin.yesVotes += 1;
                     if (src instanceof Player) {
@@ -49,13 +51,13 @@ public class RebootVote implements CommandExecutor {
                     return CommandResult.success();
                 } else {
                     plugin.sendMessage(src, "&4There is no vote running at the moment");
-                    return CommandResult.success();
+                    return CommandResult.empty();
                 }
             }
             if (op.equals("no")) {
                 if (plugin.hasVoted.contains(src)) {
                     plugin.sendMessage(src, "&4You have already voted!");
-                    return CommandResult.success();
+                    return CommandResult.empty();
                 } else if (plugin.voteStarted) {
                     plugin.noVotes += 1;
                     if (src instanceof Player) {
@@ -67,7 +69,7 @@ public class RebootVote implements CommandExecutor {
 
                 } else {
                     plugin.sendMessage(src, "&4There is no vote running at the moment");
-                    return CommandResult.success();
+                    return CommandResult.empty();
                 }
             }
         } else {
@@ -75,35 +77,36 @@ public class RebootVote implements CommandExecutor {
             int hours = (int) (timeLeft / 3600);
             int minutes = (int) ((timeLeft - hours * 3600) / 60);
 
-            if (!src.hasPermission("mmcreboot.reboot.vote.bypass") && Sponge.getServer().getOnlinePlayers().size() < Config.timerMinplayers) {
+            if (!src.hasPermission("mmcreboot.reboot.bypass") && Sponge.getServer().getOnlinePlayers().size() < Config.timerMinplayers) {
                 plugin.sendMessage(src, "&4There must be a minimum of " + Config.timerMinplayers + " players online to start a vote");
+                return CommandResult.empty();
             } else {
                 if (plugin.isRestarting && minutes <= 10) {
                     plugin.sendMessage(src, "&4The server is already restarting!");
-                    return CommandResult.success();
+                    return CommandResult.empty();
                 } else {
-                    if (!src.hasPermission("mmcreboot.reboot.vote.bypass") && plugin.justStarted) {
+                    if (!src.hasPermission("mmcreboot.reboot.bypass") && plugin.justStarted) {
                         plugin.sendMessage(src, "&4The server needs to be online for " + Config.timerStartvote + " minutes before starting a vote!");
-                        return CommandResult.success();
+                        return CommandResult.empty();
                     } else {
-                        if (!src.hasPermission("mmcreboot.reboot.vote.bypass") && !Config.voteEnabled) {
+                        if (!src.hasPermission("mmcreboot.reboot.bypass") && !Config.voteEnabled) {
                             plugin.sendMessage(src, "&4Voting to restart is disabled");
-                            return CommandResult.success();
+                            return CommandResult.empty();
                         } else {
                             if (plugin.cdTimer == 1) {
                                 plugin.sendMessage(src, "&4You need to wait " + Config.timerRevote + " minutes before starting another vote!");
-                                return CommandResult.success();
+                                return CommandResult.empty();
                             } else if (plugin.hasVoted.contains(src)) {
                                 plugin.sendMessage(src, "&4You have already voted!");
-                                return CommandResult.success();
+                                return CommandResult.empty();
                             } else {
-                                if (!src.hasPermission("mmcreboot.reboot.vote")) {
+                                if (!src.hasPermission("mmcreboot.reboot.bypass")) {
                                     plugin.sendMessage(src, "&4You don't have permission to do this!");
-                                    return CommandResult.success();
+                                    return CommandResult.empty();
                                 } else {
                                     if (plugin.voteStarted) {
                                         plugin.sendMessage(src, "&4A vote is already running");
-                                        return CommandResult.success();
+                                        return CommandResult.empty();
                                     }
                                     if (src instanceof Player) {
                                         Player player = (Player) src;
