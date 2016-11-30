@@ -35,7 +35,7 @@ public class RebootHelp implements CommandExecutor {
         if (sender.hasPermission("mmcreboot.reboot.start")) contents.add(plugin.fromLegacy("&3/reboot start &7[&bh&7|&bm&7|&bs&7] &7[&btime&7] &7(&breason&7) &b- &7restart the server after a given time"));
         if (sender.hasPermission("mmcreboot.reboot.cancel")) contents.add(plugin.fromLegacy("&3/reboot &bcancel - &7cancel any current restart timer"));
         if (sender.hasPermission("mmcreboot.reboot.vote")) contents.add(plugin.fromLegacy("&3/reboot &bvote - &7starts a vote to restart the server"));
-        contents.add(plugin.fromLegacy("&3/reboot &btime - &7informs you how much time is left before restarting"));
+        if (sender.hasPermission("mmcreboot.reboot.time")) contents.add(plugin.fromLegacy("&3/reboot &btime - &7informs you how much time is left before restarting"));
         contents.add(plugin.fromLegacy("&3/reboot &bvote yes - &7vote yes to restart the server"));
         contents.add(plugin.fromLegacy("&3/reboot &bvote no - &7vote no to restart the server"));
 

@@ -90,7 +90,7 @@ public class RebootVote implements CommandExecutor {
                             } else if (plugin.hasVoted.contains(src)) {
                                 throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
                             } else {
-                                if (!src.hasPermission("mmcreboot.reboot.bypass")) {
+                                if (!src.hasPermission("mmcreboot.reboot.bypass") && !src.hasPermission("mmcreboot.reboot.vote")) {
                                     throw new CommandException(plugin.fromLegacy("&4You don't have permission to do this!"));
                                 } else {
                                     if (plugin.voteStarted) {
