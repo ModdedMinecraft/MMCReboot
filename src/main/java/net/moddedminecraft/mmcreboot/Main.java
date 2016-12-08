@@ -45,6 +45,9 @@ public class Main {
     public Logger logger;
 
     @Inject
+    private Metrics metrics;
+
+    @Inject
     @ConfigDir(sharedRoot = false)
     private File configDir;
 

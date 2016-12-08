@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RESTART_FILE='config/MMCReboot/restart.txt'
+RESTART_FILE='config/mmcreboot/restart.txt'
 RESTART_MTIME=0
 if [ -f "${RESTART_FILE}" ]; then
 	RESTART_MTIME=`stat -c %Y "${RESTART_FILE}"`
