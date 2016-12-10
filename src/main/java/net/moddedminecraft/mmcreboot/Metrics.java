@@ -8,6 +8,7 @@ import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.Scheduler;
 import org.spongepowered.api.scheduler.Task;
@@ -57,10 +58,13 @@ public class Metrics {
     // A list with all custom charts
     private final List<CustomChart> charts = new ArrayList<>();
 
+    // The config path
+    private Path configDir;
+
     // The constructor is not meant to be called by the user himself.
     // The instance is created using Dependency Injection (https://docs.spongepowered.org/master/en/plugin/injection.html)
     @Inject
-    private Metrics(PluginContainer plugin, Logger logger) {
+    private Metrics(PluginContainer plugin, Logger logger, @ConfigDir(sharedRoot = true) Path configDir) {
         if (created) {
             // We don't want more than one instance of this class
             throw new IllegalStateException("There's already an instance of this Metrics class!");
@@ -70,6 +74,7 @@ public class Metrics {
 
         this.plugin = plugin;
         this.logger = logger;
+        this.configDir = configDir;
 
         try {
             loadConfig();
@@ -171,7 +176,7 @@ public class Metrics {
                 Task.Builder taskBuilder = scheduler.createTaskBuilder();
                 taskBuilder.execute(() -> submitData()).submit(plugin);
             }
-        }, 1000*60*1, 1000*60*30);
+        }, 1000*60*5, 1000*60*30);
         // Submit the data every 30 minutes, first time after 5 minutes to give other plugins enough time to start
         // WARNING: Changing the frequency has no effect but your plugin WILL be blocked/deleted!
         // WARNING: Just don't do it!
@@ -252,7 +257,7 @@ public class Metrics {
      * @throws IOException If something did not work :(
      */
     private void loadConfig() throws IOException {
-        Path configPath = Sponge.getGame().getGameDirectory().resolve("config").resolve("bStats");
+        Path configPath = configDir.resolve("bStats");
         configPath.toFile().mkdirs();
         File configFile = new File(configPath.toFile(), "config.conf");
         HoconConfigurationLoader configurationLoader = HoconConfigurationLoader.builder().setFile(configFile).build();
@@ -293,7 +298,7 @@ public class Metrics {
      * @return The first bStats metrics class.
      */
     private Class<?> getFirstBStatsClass() {
-        Path configPath = Sponge.getGame().getGameDirectory().resolve("config").resolve("bStats");
+        Path configPath = configDir.resolve("bStats");
         configPath.toFile().mkdirs();
         File tempFile = new File(configPath.toFile(), "temp.txt");
 
