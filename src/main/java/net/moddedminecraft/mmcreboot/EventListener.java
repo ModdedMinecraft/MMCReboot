@@ -26,7 +26,7 @@ public class EventListener {
                     plugin.sendMessage(player, "&f[&6Restart-Vote&f] &3There is a vote to restart the server.");
                     plugin.sendMessage(player, "&6Type &a/reboot vote yes &6if you agree");
                     plugin.sendMessage(player, "&6Type &c/reboot vote no &6if you do not agree");
-                    plugin.sendMessage(player, "&6If there are more yes votes than no, The server will be restarted! (minimum of 5)");
+                    plugin.sendMessage(player, "&6If there are more yes votes than no, The server will be restarted! (minimum of " + Config.timerMinplayers + ")");
                 }
             }).delay(10, TimeUnit.SECONDS).name("mmcreboot-s-sendVoteOnLogin").submit(this);
         }
