@@ -123,14 +123,13 @@ public class RebootVote implements CommandExecutor {
                                     voteTimer.schedule(new TimerTask() {
                                         public void run() {
                                             if ((plugin.yesVotes > plugin.noVotes) && plugin.voteCancel == 0 && plugin.yesVotes >= 5) {
-                                                plugin.broadcastMessage("&f[&6Restart&f] &3The server will be restarted in&6 5 minutes &3because enough players have voted for a restart.");
                                                 plugin.removeScoreboard();
                                                 plugin.yesVotes = 0;
                                                 plugin.cdTimer = 1;
                                                 plugin.voteStarted = false;
                                                 plugin.hasVoted.clear();
                                                 plugin.isRestarting = true;
-                                                Config.restartInterval = 300 / 3600.0;
+                                                Config.restartInterval = (Config.timerVotepassed + 1) / 3600.0;
                                                 plugin.logger.info("[MMCReboot] scheduling restart tasks...");
                                                 plugin.usingReason = 1;
                                                 plugin.reason = "Players have voted to restart the server.";
