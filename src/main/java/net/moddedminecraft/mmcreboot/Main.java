@@ -38,7 +38,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-@Plugin(id = "mmcreboot", name = "MMCReboot", version = "1.2", authors = {"Leelawd93"})
+@Plugin(id = "mmcreboot", name = "MMCReboot", version = "1.3", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
