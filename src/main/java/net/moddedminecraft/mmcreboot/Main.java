@@ -266,7 +266,7 @@ public class Main {
             });
         }
         rebootTimer = new Timer();
-        rebootTimer.schedule(new ShutdownTask(this), (long)(Config.restartInterval * 3600000.0));
+        rebootTimer.schedule(new ShutdownTask(this), (long) (Config.restartInterval * 3600000.0));
 
         logger.info("[MMCReboot] RebootCMD scheduled for " + (long)(Config.restartInterval  * 3600.0) + " seconds from now!");
         Config.restartEnabled = true;
@@ -309,6 +309,13 @@ public class Main {
             logger.info("[MMCReboot] Something went wrong while saving & stoping!");
             return false;
         }
+        return true;
+    }
+
+    public boolean useCommandOnRestart() {
+        logger.info("[MMCReboot] Running Command");
+        isRestarting = false;
+        Sponge.getCommandManager().process(Sponge.getServer().getConsole(), Config.restartCommand.replace("/", ""));
         return true;
     }
 

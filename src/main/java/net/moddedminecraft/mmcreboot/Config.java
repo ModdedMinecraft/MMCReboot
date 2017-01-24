@@ -44,6 +44,9 @@ public class Config {
     public static boolean voteEnabled;
     public static int timerVotepassed;
 
+    public static boolean restartUseCommand;
+    public static String restartCommand;
+
     public void configCheck() throws IOException, ObjectMappingException {
 
         if (!plugin.defaultConfFile.exists()) {
@@ -59,6 +62,9 @@ public class Config {
         timerVotepassed = check(config.getNode("timer", "vote-passed"), 300, "Time until the restart after a vote has passed in seconds (default 300 = 5 minutes)").getInt();
         timerMinplayers = check(config.getNode("timer", "min-players"), 5, "The required amount of players online to start a vote ").getInt();
         voteEnabled = check(config.getNode("voting", "enabled"), true, "Enable or Disable the ability for players to vote for a server restart").getBoolean();
+
+        restartUseCommand = check(config.getNode("restart", "use-command"), false, "If enabled, This will run the configured command instead of restarting the server.").getBoolean();
+        restartCommand = check(config.getNode("restart", "command"), "/changeme", "The command to run if 'use-command' has been enabled").getString();
 
         loader.save(config);
     }
