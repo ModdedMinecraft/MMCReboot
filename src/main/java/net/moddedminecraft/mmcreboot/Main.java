@@ -202,6 +202,9 @@ public class Main {
 
     public void CheckTPSForRestart() {
         if (getTPS() < Config.tpsMinimum && Config.tpsEnabled && !TPSRestarting) {
+            
+            TPSRestarting = true;
+
             Timer warnTimer = new Timer();
             warningTimers.add(warnTimer);
             warnTimer.schedule(new TimerTask() {
@@ -209,7 +212,6 @@ public class Main {
                 public void run() {
                     if (getTPS() < Config.tpsMinimum) {
                         isRestarting = true;
-                        TPSRestarting = true;
                         Config.restartInterval = (Config.tpsTimer + 1) / 3600.0;
                         logger.info("[MMCReboot] scheduling restart tasks...");
                         if (Config.tpsUseReason) {
