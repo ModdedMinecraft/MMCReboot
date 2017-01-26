@@ -221,7 +221,7 @@ public class Main {
                         scheduleTasks();
                     }
                 }
-            }, 30000);
+            }, 20000);
         }
     }
 
