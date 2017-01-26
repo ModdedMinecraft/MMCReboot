@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.moddedminecraft</groupId>
     <artifactId>MMCReboot</artifactId>
-    <version>1.4-API-5.0.0</version>
+    <version>1.5-API-${api}</version>
     <name>MMCReboot</name>
     <description>
         Restart plugin for sponge to allow server restart timers, countdowns and votes.
@@ -14,6 +14,7 @@
         <ghUser>leelawd</ghUser>
         <ghRepo>mmcreboot-sponge</ghRepo>
         <ghProject>${ghUser}/${ghRepo}</ghProject>
+        <api>5.0.0</api>
 
     </properties>
 
@@ -121,7 +122,7 @@
         <dependency>
             <groupId>org.spongepowered</groupId>
             <artifactId>spongeapi</artifactId>
-            <version>5.0.0</version>
+            <version>${api}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

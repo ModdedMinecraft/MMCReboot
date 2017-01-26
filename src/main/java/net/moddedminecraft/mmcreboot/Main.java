@@ -38,7 +38,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-@Plugin(id = "mmcreboot", name = "MMCReboot", version = "1.4", authors = {"Leelawd93"})
+@Plugin(id = "mmcreboot", name = "MMCReboot", version = "1.5", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
@@ -202,7 +202,7 @@ public class Main {
 
     public void CheckTPSForRestart() {
         if (getTPS() < Config.tpsMinimum && Config.tpsEnabled && !TPSRestarting) {
-            
+
             TPSRestarting = true;
 
             Timer warnTimer = new Timer();
