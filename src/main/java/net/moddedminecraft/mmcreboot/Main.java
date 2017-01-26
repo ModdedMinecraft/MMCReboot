@@ -117,7 +117,7 @@ public class Main {
 
         Sponge.getScheduler().createTaskBuilder().execute(this::reduceVote).interval(1, TimeUnit.SECONDS).name("mmcreboot-s-reduceVoteCount").submit(this);
 
-        Sponge.getScheduler().createTaskBuilder().execute(this::CheckTPSForRestart).interval(30, TimeUnit.SECONDS).name("mmcreboot-s-checkTPSForRestart").submit(this);
+        Sponge.getScheduler().createTaskBuilder().execute(this::CheckTPSForRestart).delay(Config.tpsCheckDelay, TimeUnit.MINUTES).interval(30, TimeUnit.SECONDS).name("mmcreboot-s-checkTPSForRestart").submit(this);
 
         logger.info("MMCReboot Loaded");
     }
