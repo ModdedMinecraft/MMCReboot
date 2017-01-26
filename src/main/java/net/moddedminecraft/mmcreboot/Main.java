@@ -73,6 +73,7 @@ public class Main {
     public long startTimestamp;
     public boolean justStarted = true;
     public boolean isRestarting = false;
+    public boolean TPSRestarting = false;
     public int rebootConfirm = 0;
 
     // Timers
@@ -114,7 +115,9 @@ public class Main {
 
         Sponge.getScheduler().createTaskBuilder().execute(this::action).delay(250, TimeUnit.MILLISECONDS).interval(500,TimeUnit.MILLISECONDS).name("mmcreboot-s-sendAction").submit(this);
 
-        Sponge.getScheduler().createTaskBuilder().execute(this::reduceVote).interval(1,TimeUnit.SECONDS).name("mmcreboot-s-reduceVoteCount").submit(this);
+        Sponge.getScheduler().createTaskBuilder().execute(this::reduceVote).interval(1, TimeUnit.SECONDS).name("mmcreboot-s-reduceVoteCount").submit(this);
+
+        Sponge.getScheduler().createTaskBuilder().execute(this::CheckTPSForRestart).interval(30, TimeUnit.SECONDS).name("mmcreboot-s-checkTPSForRestart").submit(this);
 
         logger.info("MMCReboot Loaded");
     }
@@ -190,6 +193,36 @@ public class Main {
                 .build();
 
         cmdManager.register(this, rbootmain, "reboot", "restart");
+    }
+
+    public Double getTPS() {
+        Double TPS = Sponge.getServer().getTicksPerSecond();
+        return TPS;
+    }
+
+    public void CheckTPSForRestart() {
+        if (getTPS() < Config.tpsMinimum && Config.tpsEnabled && !TPSRestarting) {
+            Timer warnTimer = new Timer();
+            warningTimers.add(warnTimer);
+            warnTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (getTPS() < Config.tpsMinimum) {
+                        isRestarting = true;
+                        TPSRestarting = true;
+                        Config.restartInterval = (Config.tpsTimer + 1) / 3600.0;
+                        logger.info("[MMCReboot] scheduling restart tasks...");
+                        if (Config.tpsUseReason) {
+                            usingReason = 1;
+                            reason = Config.tpsMessage;
+                        } else {
+                            usingReason = 0;
+                        }
+                        scheduleTasks();
+                    }
+                }
+            }, 30000);
+        }
     }
 
     public void action() {
@@ -283,6 +316,7 @@ public class Main {
         rebootTimer = new Timer();
         Config.restartEnabled = false;
         isRestarting = false;
+        TPSRestarting = false;
         usingReason = 0;
     }
 

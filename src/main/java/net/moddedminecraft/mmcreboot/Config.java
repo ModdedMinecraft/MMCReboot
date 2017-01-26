@@ -47,6 +47,14 @@ public class Config {
     public static boolean restartUseCommand;
     public static String restartCommand;
 
+    public static boolean tpsEnabled;
+    public static int tpsMinimum;
+    public static int tpsTimer;
+    public static boolean tpsUseReason;
+    public static String tpsMessage;
+    public static boolean tpsRestartCancel;
+    public static String tpsRestartCancelMsg;
+
     public void configCheck() throws IOException, ObjectMappingException {
 
         if (!plugin.defaultConfFile.exists()) {
@@ -65,6 +73,15 @@ public class Config {
 
         restartUseCommand = check(config.getNode("restart", "use-command"), false, "If enabled, This will run the configured command instead of restarting the server.").getBoolean();
         restartCommand = check(config.getNode("restart", "command"), "/changeme", "The command to run if 'use-command' has been enabled").getString();
+
+        tpsEnabled = check(config.getNode("tps", "use"), false, "If enabled, the server will initiate a restart timer if the TPS is below the minimum set.").getBoolean();
+        tpsMinimum = check(config.getNode("tps", "minimum"), 10, "The minimum TPS to initiate a restart timer").getInt();
+        tpsTimer = check(config.getNode("tps", "timer"), 300, "Time until the restart after a TPS check has failed, in seconds (default 300 = 5 minutes)").getInt();
+        tpsUseReason = check(config.getNode("tps", "use-reason"), true, "If enabled, there will be a reason broadcast alongside the countdown for the restart.").getBoolean();
+        tpsMessage = check(config.getNode("tps", "reason-message"), "Server TPS is below the minimum.", "The reason to broadcast if 'use-reason' is enabled").getString();
+        tpsRestartCancel = check(config.getNode("tps", "restart-cancel"), false, "If set to true, When the restart timer reaches 0, The TPS will be checked again \n"
+                                                                                + "If the TPS is above the minimum, the restart is canceled").getBoolean();
+        tpsRestartCancelMsg = check(config.getNode("tps", "restart-cancel-message"), "&f[&6Restart&f] &bThe server will not restart. The TPS is now above the minimum", "The broadcast message sent to everyone if the restart was canceled").getString();
 
         loader.save(config);
     }
