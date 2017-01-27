@@ -82,7 +82,7 @@ public class Config {
         tpsMessage = check(config.getNode("tps", "reason-message"), "Server TPS is below the minimum.", "The reason to broadcast if 'use-reason' is enabled").getString();
         tpsRestartCancel = check(config.getNode("tps", "restart-cancel"), false, "If set to true, When the restart timer reaches 0, The TPS will be checked again \n"
                                                                                 + "If the TPS is above the minimum, the restart is canceled").getBoolean();
-        tpsRestartCancelMsg = check(config.getNode("tps", "restart-cancel-message"), "&f[&6Restart&f] &bThe server will not restart. The TPS is now above the minimum", "The broadcast message sent to everyone if the restart was canceled").getString();
+        tpsRestartCancelMsg = check(config.getNode("tps", "restart-cancel-message"), "&bThe server will not restart. The TPS is now above the minimum", "The broadcast message sent to everyone if the restart was canceled").getString();
         tpsCheckDelay = check(config.getNode("tps", "check-delay"), 15, "How long after the server starts until the TPS check initiates. (In minutes)").getInt();
 
         loader.save(config);
