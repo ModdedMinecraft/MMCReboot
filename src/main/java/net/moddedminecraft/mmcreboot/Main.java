@@ -266,34 +266,26 @@ public class Main {
                         if (reason != null) {
                             if (minutes > 1) {
                                 broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
-                                broadcastMessage("&f[&6Restart&f] &d" + reason);
-                                isRestarting = true;
                             } else if (minutes == 1) {
                                 broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
-                                broadcastMessage("&f[&6Restart&f] &d" + reason);
-                                isRestarting = true;
                             } else if (minutes < 1) {
                                 broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
-                                broadcastMessage("&f[&6Restart&f] &d" + reason);
-                                isRestarting = true;
                             } else {
                                 logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
-                                isRestarting = true;
                             }
+                            broadcastMessage("&f[&6Restart&f] &d" + reason);
+                            isRestarting = true;
                         } else {
                             if (minutes > 1) {
                                 broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
-                                isRestarting = true;
                             } else if (minutes == 1) {
                                 broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
-                                isRestarting = true;
                             } else if (minutes < 1) {
                                 broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
-                                isRestarting = true;
                             } else {
                                 logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
-                                isRestarting = true;
                             }
+                            isRestarting = true;
                         }
                     }
                 }, (long) ((Config.restartInterval * 60 - aTimerBroadcast) * 60000.0));
