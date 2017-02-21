@@ -34,6 +34,13 @@ public class Config {
             0.5
     };
 
+    private String[] realTimeList = {
+            "00:00",
+            "06:00",
+            "12:00",
+            "18:00"
+    };
+
     public static boolean restartEnabled;
     public static double restartInterval;
     public static List<Double> timerBroadcast;
@@ -55,6 +62,9 @@ public class Config {
     public static boolean tpsRestartCancel;
     public static String tpsRestartCancelMsg;
     public static int tpsCheckDelay;
+
+    public static List<String> realTime;
+    public static boolean realTimeEnable;
 
     public void configCheck() throws IOException, ObjectMappingException {
 
@@ -84,6 +94,10 @@ public class Config {
                                                                                 + "If the TPS is above the minimum, the restart is canceled").getBoolean();
         tpsRestartCancelMsg = check(config.getNode("tps", "restart-cancel-message"), "&bThe server will not restart. The TPS is now above the minimum", "The broadcast message sent to everyone if the restart was canceled").getString();
         tpsCheckDelay = check(config.getNode("tps", "check-delay"), 15, "How long after the server starts until the TPS check initiates. (In minutes)").getInt();
+
+        realTime = check(config.getNode("realtime", "times"), realTimeList, "If enabled, what times should the server restart? (24H Time: HH:MM)").getList(TypeToken.of(String.class));
+        realTimeEnable = check(config.getNode("realtime", "enable"), false, "Enable to allow the server to restart at specific times of the day.").getBoolean();
+
 
         loader.save(config);
     }

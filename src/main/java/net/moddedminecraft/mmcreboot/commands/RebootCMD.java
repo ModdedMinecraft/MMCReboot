@@ -53,7 +53,7 @@ public class RebootCMD implements CommandExecutor {
 
         plugin.logger.info("[MMCReboot] scheduling restart tasks...");
         plugin.removeScoreboard();
-        plugin.scheduleTasks();
+        plugin.scheduleTasks("normal");
         plugin.isRestarting = true;
 
         if (restartTime <= 300) {
