@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.moddedminecraft</groupId>
     <artifactId>MMCReboot</artifactId>
-    <version>1.5-API-${api}</version>
+    <version>1.6-API-${api}</version>
     <name>MMCReboot</name>
     <description>
         Restart plugin for sponge to allow server restart timers, countdowns and votes.

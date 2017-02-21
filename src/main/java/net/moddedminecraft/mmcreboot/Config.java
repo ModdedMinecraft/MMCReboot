@@ -79,7 +79,7 @@ public class Config {
         playSoundEnabled = check(config.getNode("timer", "notifications", "playsound"), true, "Should a sound be played when a restart broadcast is sent?").getBoolean();
         titleEnabled = check(config.getNode("timer", "notifications", "title", "enabled"), true, "Should a title message pop up in the middle of the screen").getBoolean();
         titleStayTime = check(config.getNode("timer", "notifications", "title", "staytime"), 2, "How long should the title message show up for before disappearing? (in seconds)").getInt();
-        titleMessage = check(config.getNode("timer", "notifications", "title", "message"), "The server will be restarting in {minutes}:{seconds}", "The title message to be displayed").getString();
+        titleMessage = check(config.getNode("timer", "notifications", "title", "message"), "The server will be restarting in {minutes}:{seconds}", "The title message to be displayed ({hours},{minutes},{seconds} will be replaced").getString();
 
         voteEnabled = check(config.getNode("voting", "enabled"), true, "Enable or Disable the ability for players to vote for a server restart").getBoolean();
 
