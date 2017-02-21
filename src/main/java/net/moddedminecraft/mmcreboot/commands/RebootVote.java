@@ -133,7 +133,7 @@ public class RebootVote implements CommandExecutor {
                                                 plugin.logger.info("[MMCReboot] scheduling restart tasks...");
                                                 plugin.usingReason = 1;
                                                 plugin.reason = "Players have voted to restart the server.";
-                                                plugin.scheduleTasks("normal");
+                                                plugin.scheduleTasks();
                                             } else {
                                                 if (plugin.voteCancel == 0) {
                                                     plugin.broadcastMessage("&f[&6Restart&f] &3The server will not be restarted. Not enough people have voted.");

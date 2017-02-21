@@ -33,7 +33,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 @Plugin(id = "mmcreboot", name = "MMCReboot", version = "1.5", authors = {"Leelawd93"})
@@ -78,7 +80,6 @@ public class Main {
     private ArrayList<Timer> warningTimers = new ArrayList<Timer>();
     private Timer rebootTimer;
     private Timer justStartedTimer;
-
 
     private Config config;
 
@@ -219,7 +220,7 @@ public class Main {
                         } else {
                             usingReason = 0;
                         }
-                        scheduleTasks("normal");
+                        scheduleTasks();
                     }
                 }
             }, 20000);
@@ -246,145 +247,66 @@ public class Main {
         }
     }
 
-    protected Calendar scheduleShutdownTime(String timeSpec) throws Exception {
-        if (timeSpec == null) {
-            return null;
-        }
-        if (timeSpec.matches("^now$")) {
-            Calendar now = Calendar.getInstance();
-
-            this.shutdownImminent = true;
-            this.shutdownTimer = new Timer();
-
-            this.shutdownTimer.schedule(new ShutdownTask(this), now.getTime());
-            Util.broadcast("The server has been scheduled for immediate shutdown.");
-
-            return now;
-        }
-        if (!timeSpec.matches("^[0-9]{1,2}:[0-9]{2}$")) {
-            throw new Exception("Incorrect time specification. The format is HH:MM in 24h time.");
-        }
-        Calendar now = Calendar.getInstance();
-        Calendar shutdownTime = Calendar.getInstance();
-
-        String[] timecomponent = timeSpec.split(":");
-        shutdownTime.set(11, Integer.valueOf(timecomponent[0]).intValue());
-        shutdownTime.set(12, Integer.valueOf(timecomponent[1]).intValue());
-        shutdownTime.set(13, 0);
-        shutdownTime.set(14, 0);
-        if (now.compareTo(shutdownTime) >= 0) {
-            shutdownTime.add(5, 1);
-        }
-        this.realShutdownTimes.add(shutdownTime);
-
-        return shutdownTime;
-    }
-
-    public void scheduleTasks(String type) {
+    public void scheduleTasks() {
         cancelTasks();
-        if (type.equals("realtime")) {
-            if (Config.timerBroadcast != null) {
-                Config.timerBroadcast.stream().filter(aTimerBroadcast -> Config.restartInterval * 60 - aTimerBroadcast > 0).forEach(aTimerBroadcast -> {
-                    Timer warnTimer = new Timer();
-                    warningTimers.add(warnTimer);
-                    warnTimer.schedule(new TimerTask() {
-                        public void run() {
-                            double timeLeft = (Config.restartInterval * 3600) - ((double) (System.currentTimeMillis() - startTimestamp) / 1000);
-                            int hours = (int) (timeLeft / 3600);
-                            int minutes = (int) ((timeLeft - hours * 3600) / 60);
-                            int seconds = (int) timeLeft % 60;
+        if (Config.timerBroadcast != null) {
+            Config.timerBroadcast.stream().filter(aTimerBroadcast -> Config.restartInterval * 60 - aTimerBroadcast > 0).forEach(aTimerBroadcast -> {
+                Timer warnTimer = new Timer();
+                warningTimers.add(warnTimer);
+                warnTimer.schedule(new TimerTask() {
+                    public void run() {
+                        double timeLeft = (Config.restartInterval * 3600) - ((double) (System.currentTimeMillis() - startTimestamp) / 1000);
+                        int hours = (int) (timeLeft / 3600);
+                        int minutes = (int) ((timeLeft - hours * 3600) / 60);
+                        int seconds = (int) timeLeft % 60;
 
-                            NumberFormat formatter = new DecimalFormat("00");
-                            String s = formatter.format(seconds);
+                        NumberFormat formatter = new DecimalFormat("00");
+                        String s = formatter.format(seconds);
 
-                            if (reason != null) {
-                                if (minutes > 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
-                                } else if (minutes == 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
-                                } else if (minutes < 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
-                                } else {
-                                    logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
-                                }
+                        if (reason != null) {
+                            if (minutes > 1) {
+                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
+                                broadcastMessage("&f[&6Restart&f] &d" + reason);
+                                isRestarting = true;
+                            } else if (minutes == 1) {
+                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
+                                broadcastMessage("&f[&6Restart&f] &d" + reason);
+                                isRestarting = true;
+                            } else if (minutes < 1) {
+                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
                                 broadcastMessage("&f[&6Restart&f] &d" + reason);
                                 isRestarting = true;
                             } else {
-                                if (minutes > 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
-                                } else if (minutes == 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
-                                } else if (minutes < 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
-                                } else {
-                                    logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
-                                }
+                                logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
                                 isRestarting = true;
                             }
-                        }
-                    }, (long) ((Config.restartInterval * 60 - aTimerBroadcast) * 60000.0));
-                });
-            }
-
-            rebootTimer = new Timer();
-            rebootTimer.schedule(new ShutdownTask(this), (long) (Config.restartInterval * 3600000.0));
-
-            logger.info("[MMCReboot] RebootCMD scheduled for " + (long) (Config.restartInterval * 3600.0) + " seconds from now!");
-            Config.restartEnabled = true;
-            startTimestamp = System.currentTimeMillis();
-            isRestarting = true;
-        } else {
-            if (Config.timerBroadcast != null) {
-                Config.timerBroadcast.stream().filter(aTimerBroadcast -> Config.restartInterval * 60 - aTimerBroadcast > 0).forEach(aTimerBroadcast -> {
-                    Timer warnTimer = new Timer();
-                    warningTimers.add(warnTimer);
-                    warnTimer.schedule(new TimerTask() {
-                        public void run() {
-                            double timeLeft = (Config.restartInterval * 3600) - ((double) (System.currentTimeMillis() - startTimestamp) / 1000);
-                            int hours = (int) (timeLeft / 3600);
-                            int minutes = (int) ((timeLeft - hours * 3600) / 60);
-                            int seconds = (int) timeLeft % 60;
-
-                            NumberFormat formatter = new DecimalFormat("00");
-                            String s = formatter.format(seconds);
-
-                            if (reason != null) {
-                                if (minutes > 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
-                                } else if (minutes == 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
-                                } else if (minutes < 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
-                                } else {
-                                    logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
-                                }
-                                broadcastMessage("&f[&6Restart&f] &d" + reason);
+                        } else {
+                            if (minutes > 1) {
+                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
+                                isRestarting = true;
+                            } else if (minutes == 1) {
+                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
+                                isRestarting = true;
+                            } else if (minutes < 1) {
+                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
                                 isRestarting = true;
                             } else {
-                                if (minutes > 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
-                                } else if (minutes == 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
-                                } else if (minutes < 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
-                                } else {
-                                    logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
-                                }
+                                logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
                                 isRestarting = true;
                             }
                         }
-                    }, (long) ((Config.restartInterval * 60 - aTimerBroadcast) * 60000.0));
-                    logger.info("[MMCReboot] warning scheduled for " + (long) ((Config.restartInterval * 60 - aTimerBroadcast) * 60.0) + " seconds from now!");
-                });
-            }
-            rebootTimer = new Timer();
-            rebootTimer.schedule(new ShutdownTask(this), (long) (Config.restartInterval * 3600000.0));
-
-            logger.info("[MMCReboot] RebootCMD scheduled for " + (long) (Config.restartInterval * 3600.0) + " seconds from now!");
-            Config.restartEnabled = true;
-            startTimestamp = System.currentTimeMillis();
-            isRestarting = true;
+                    }
+                }, (long) ((Config.restartInterval * 60 - aTimerBroadcast) * 60000.0));
+                logger.info("[MMCReboot] warning scheduled for " + (long) ((Config.restartInterval * 60 - aTimerBroadcast) * 60.0) + " seconds from now!");
+            });
         }
+        rebootTimer = new Timer();
+        rebootTimer.schedule(new ShutdownTask(this), (long) (Config.restartInterval * 3600000.0));
+
+        logger.info("[MMCReboot] RebootCMD scheduled for " + (long)(Config.restartInterval  * 3600.0) + " seconds from now!");
+        Config.restartEnabled = true;
+        startTimestamp = System.currentTimeMillis();
+        isRestarting = true;
     }
 
     public void cancelTasks() {
