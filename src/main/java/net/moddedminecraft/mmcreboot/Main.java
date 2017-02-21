@@ -131,7 +131,17 @@ public class Main {
 
     @Listener
     public void onPluginReload(GameReloadEvent event) throws IOException, ObjectMappingException {
+        cancelTasks();
+        removeScoreboard();
+        isRestarting = false;
+        
         this.config = new Config(this);
+
+        if(Config.restartEnabled) {
+            scheduleTasks();
+        } else {
+            logger.info("[MMCReboot] No automatic restarts scheduled!");
+        }
     }
 
     private void loadCommands() {
