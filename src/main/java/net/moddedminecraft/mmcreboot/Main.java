@@ -12,6 +12,7 @@ import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.DefaultConfig;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.GameReloadEvent;
@@ -27,6 +28,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.serializer.TextSerializers;
+import org.spongepowered.api.text.title.Title;
 
 import java.io.File;
 import java.io.IOException;
@@ -273,6 +275,15 @@ public class Main {
                             } else {
                                 logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
                             }
+                            for(Player p : Sponge.getServer().getOnlinePlayers()) {
+                                if (Config.playSoundEnabled) {
+                                    p.playSound(SoundTypes.BLOCK_NOTE_PLING, p.getLocation().getPosition(), 2);
+                                }
+                                if (Config.titleEnabled) {
+                                    p.sendTitle(Title.builder().subtitle(fromLegacy(Config.titleMessage.replace("{hours}",  ""+hours).replace("{minutes}",  ""+minutes).replace("{seconds}",  ""+s)))
+                                            .fadeIn(20).fadeOut(20).stay(Config.titleStayTime).build());
+                                }
+                            }
                             broadcastMessage("&f[&6Restart&f] &d" + reason);
                             isRestarting = true;
                         } else {
@@ -284,6 +295,15 @@ public class Main {
                                 broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
                             } else {
                                 logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
+                            }
+                            for(Player p : Sponge.getServer().getOnlinePlayers()) {
+                                if (Config.playSoundEnabled) {
+                                    p.playSound(SoundTypes.BLOCK_NOTE_PLING, p.getLocation().getPosition(), 2);
+                                }
+                                if (Config.titleEnabled) {
+                                    p.sendTitle(Title.builder().subtitle(fromLegacy(Config.titleMessage.replace("{hours}",  ""+hours).replace("{minutes}",  ""+minutes).replace("{seconds}",  ""+s)))
+                                            .fadeIn(20).fadeOut(20).stay(Config.titleStayTime * 20).build());
+                                }
                             }
                             isRestarting = true;
                         }

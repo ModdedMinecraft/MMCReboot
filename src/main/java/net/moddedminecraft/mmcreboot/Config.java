@@ -56,6 +56,11 @@ public class Config {
     public static String tpsRestartCancelMsg;
     public static int tpsCheckDelay;
 
+    public static boolean playSoundEnabled;
+    public static boolean titleEnabled;
+    public static int titleStayTime;
+    public static String titleMessage;
+
     public void configCheck() throws IOException, ObjectMappingException {
 
         if (!plugin.defaultConfFile.exists()) {
@@ -64,12 +69,18 @@ public class Config {
 
         restartEnabled = check(config.getNode("autorestart", "enabled"), true, "Enable / Disable automatic restarts after the designated interval time.").getBoolean();
         restartInterval = check(config.getNode("autorestart", "interval"), 6, "How long in hours should the auto restart timer be set for?").getInt();
+
         timerBroadcast = checkList(config.getNode("timer", "broadcast"), timerBroadcastList, "warning times before reboot in minutes (0.5 = 30 seconds)").getList(TypeToken.of(Double.class));
         timerRevote =  check(config.getNode("timer", "re-vote"), 10, "Time before another vote to restart can begin. (In minutes)  ").getInt();
         timerStartvote = check(config.getNode("timer", "start-vote"), 60, "How long should it be before players are allowed to start a vote after the server has restarted (In minutes) ").getInt();
         timerVotepercent = check(config.getNode("timer", "vote-percent"), 60, "% of online players to vote yes before a restart is triggered.").getInt();
         timerVotepassed = check(config.getNode("timer", "vote-passed"), 300, "Time until the restart after a vote has passed in seconds (default 300 = 5 minutes)").getInt();
         timerMinplayers = check(config.getNode("timer", "min-players"), 5, "The required amount of players online to start a vote ").getInt();
+        playSoundEnabled = check(config.getNode("timer", "notifications", "playsound"), true, "Should a sound be played when a restart broadcast is sent?").getBoolean();
+        titleEnabled = check(config.getNode("timer", "notifications", "title", "enabled"), true, "Should a title message pop up in the middle of the screen").getBoolean();
+        titleStayTime = check(config.getNode("timer", "notifications", "title", "staytime"), 2, "How long should the title message show up for before disappearing? (in seconds)").getInt();
+        titleMessage = check(config.getNode("timer", "notifications", "title", "message"), "The server will be restarting in {minutes}:{seconds}", "The title message to be displayed").getString();
+
         voteEnabled = check(config.getNode("voting", "enabled"), true, "Enable or Disable the ability for players to vote for a server restart").getBoolean();
 
         restartUseCommand = check(config.getNode("restart", "use-command"), false, "If enabled, This will run the configured command instead of restarting the server.").getBoolean();
