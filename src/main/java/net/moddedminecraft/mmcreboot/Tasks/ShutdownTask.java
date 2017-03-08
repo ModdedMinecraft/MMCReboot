@@ -21,9 +21,6 @@ public class ShutdownTask extends TimerTask {
                     plugin.cancelTasks();
                     plugin.removeScoreboard();
                     plugin.useCommandOnRestart();
-                    if (!Config.tpsRestartCancelMsg.isEmpty()) {
-                        plugin.broadcastMessage("&f[&6Restart&f] " + Config.tpsRestartCancelMsg);
-                    }
                 } else {
                     plugin.stopServer();
                 }
@@ -31,6 +28,9 @@ public class ShutdownTask extends TimerTask {
                 plugin.cancelTasks();
                 plugin.removeScoreboard();
                 plugin.isRestarting = false;
+                if (!Config.tpsRestartCancelMsg.isEmpty()) {
+                    plugin.broadcastMessage("&f[&6Restart&f] " + Config.tpsRestartCancelMsg);
+                }
             }
         } else {
             if (Config.restartUseCommand) {
