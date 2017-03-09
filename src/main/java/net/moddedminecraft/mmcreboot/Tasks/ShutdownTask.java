@@ -15,21 +15,22 @@ public class ShutdownTask extends TimerTask {
 
     @Override
     public void run() {
-        if (Config.tpsEnabled) {
-            if (plugin.getTPS() < Config.tpsMinimum && Config.tpsRestartCancel) {
+        if (plugin.getTPSRestarting()) {
+            if (plugin.getTPS() >= Config.tpsMinimum && Config.tpsRestartCancel) {
+                plugin.cancelTasks();
+                plugin.removeScoreboard();
+                plugin.isRestarting = false;
+                plugin.setTPSRestarting(false);
+                if (!Config.tpsRestartCancelMsg.isEmpty()) {
+                    plugin.broadcastMessage("&f[&6Restart&f] " + Config.tpsRestartCancelMsg);
+                }
+            } else if (plugin.getTPS() < Config.tpsMinimum) {
                 if (Config.restartUseCommand) {
                     plugin.cancelTasks();
                     plugin.removeScoreboard();
                     plugin.useCommandOnRestart();
                 } else {
                     plugin.stopServer();
-                }
-            } else {
-                plugin.cancelTasks();
-                plugin.removeScoreboard();
-                plugin.isRestarting = false;
-                if (!Config.tpsRestartCancelMsg.isEmpty()) {
-                    plugin.broadcastMessage("&f[&6Restart&f] " + Config.tpsRestartCancelMsg);
                 }
             }
         } else {
