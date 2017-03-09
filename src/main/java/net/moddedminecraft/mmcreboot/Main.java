@@ -40,7 +40,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-@Plugin(id = "mmcreboot", name = "MMCReboot", version = "1.6", authors = {"Leelawd93"})
+@Plugin(id = "mmcreboot", name = "MMCReboot", version = "1.7", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
@@ -220,6 +220,9 @@ public class Main {
         TPSRestarting = bool;
     }
 
+    public void CheckTPSForRestart() {
+        if (getTPS() < Config.tpsMinimum && Config.tpsEnabled && !getTPSRestarting()) {
+            setTPSRestarting(true);
             Timer warnTimer = new Timer();
             warningTimers.add(warnTimer);
             warnTimer.schedule(new TimerTask() {
@@ -238,7 +241,7 @@ public class Main {
                         scheduleTasks();
                     }
                 }
-            }, 20000);
+            }, 15000);
         }
     }
 
