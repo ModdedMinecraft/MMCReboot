@@ -212,10 +212,13 @@ public class Main {
         return TPS;
     }
 
-    public void CheckTPSForRestart() {
-        if (getTPS() < Config.tpsMinimum && Config.tpsEnabled && !TPSRestarting) {
+    public boolean getTPSRestarting() {
+        return TPSRestarting;
+    }
 
-            TPSRestarting = true;
+    public void setTPSRestarting(boolean bool) {
+        TPSRestarting = bool;
+    }
 
             Timer warnTimer = new Timer();
             warningTimers.add(warnTimer);
@@ -260,7 +263,13 @@ public class Main {
     }
 
     public void scheduleTasks() {
+        boolean wasTPSRestarting = getTPSRestarting();
         cancelTasks();
+        if (wasTPSRestarting) {
+            setTPSRestarting(true);
+        } else {
+            setTPSRestarting(false);
+        }
         if (Config.timerBroadcast != null) {
             Config.timerBroadcast.stream().filter(aTimerBroadcast -> Config.restartInterval * 60 - aTimerBroadcast > 0).forEach(aTimerBroadcast -> {
                 Timer warnTimer = new Timer();
