@@ -14,7 +14,7 @@
         <ghUser>leelawd</ghUser>
         <ghRepo>mmcreboot-sponge</ghRepo>
         <ghProject>${ghUser}/${ghRepo}</ghProject>
-        <api>5.0.0</api>
+        <api>5.1.0</api>
 
     </properties>
 
