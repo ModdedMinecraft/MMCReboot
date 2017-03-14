@@ -122,7 +122,10 @@ public class RebootVote implements CommandExecutor {
                                     Timer voteTimer = new Timer();
                                     voteTimer.schedule(new TimerTask() {
                                         public void run() {
-                                            if ((plugin.yesVotes > plugin.noVotes) && plugin.voteCancel == 0 && plugin.yesVotes >= Config.timerMinplayers) {
+                                            int Online = Sponge.getServer().getOnlinePlayers().size();
+                                            float percentage = plugin.yesVotes/Online *100;
+
+                                            if ((plugin.yesVotes > plugin.noVotes) && (plugin.voteCancel == 0) && (plugin.yesVotes >= Config.timerMinplayers) && (percentage >= Config.timerVotepercent)) {
                                                 plugin.removeScoreboard();
                                                 plugin.yesVotes = 0;
                                                 plugin.cdTimer = 1;
