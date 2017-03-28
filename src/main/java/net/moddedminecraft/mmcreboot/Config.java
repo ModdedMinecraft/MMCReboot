@@ -24,19 +24,19 @@ public class Config {
         configCheck();
     }
 
-    private Double[] timerBroadcastList = {
-            10.0,
-            5.0,
-            4.0,
-            3.0,
-            2.0,
-            1.0,
-            0.5
+    private Integer[] timerBroadcastList = {
+            600,
+            300,
+            240,
+            180,
+            120,
+            60,
+            30
     };
 
     public static boolean restartEnabled;
     public static double restartInterval;
-    public static List<Double> timerBroadcast;
+    public static List<Integer> timerBroadcast;
     public static int timerRevote;
     public static int timerStartvote;
     public static int timerMinplayers;
@@ -61,7 +61,7 @@ public class Config {
     public static int titleStayTime;
     public static String titleMessage;
 
-    public static boolean playSoundOnFirstWarningOnly;
+    //public static boolean playSoundOnFirstWarningOnly;
     public static String playSoundString = "block.note.pling";
     public static double playSoundFirstTime;
 
@@ -74,7 +74,7 @@ public class Config {
         restartEnabled = check(config.getNode("autorestart", "enabled"), true, "Enable / Disable automatic restarts after the designated interval time.").getBoolean();
         restartInterval = check(config.getNode("autorestart", "interval"), 6, "How long in hours should the auto restart timer be set for?").getInt();
 
-        timerBroadcast = checkList(config.getNode("timer", "broadcast"), timerBroadcastList, "warning times before reboot in minutes (0.5 = 30 seconds)").getList(TypeToken.of(Double.class));
+        timerBroadcast = checkList(config.getNode("timer", "broadcast"), timerBroadcastList, "warning times before reboot in minutes (0.5 = 30 seconds)").getList(TypeToken.of(Integer.class));
         timerRevote =  check(config.getNode("timer", "re-vote"), 10, "Time before another vote to restart can begin. (In minutes)  ").getInt();
         timerStartvote = check(config.getNode("timer", "start-vote"), 60, "How long should it be before players are allowed to start a vote after the server has restarted (In minutes) ").getInt();
         timerVotepercent = check(config.getNode("timer", "vote-percent"), 60, "% of online players to vote yes before a restart is triggered.").getInt();
@@ -82,7 +82,7 @@ public class Config {
         timerMinplayers = check(config.getNode("timer", "min-players"), 5, "The required amount of players online to start a vote ").getInt();
 
         playSoundEnabled = check(config.getNode("timer", "notifications", "playsound"), true, "Should a sound be played when a restart broadcast is sent?").getBoolean();
-        playSoundOnFirstWarningOnly = check(config.getNode("timer", "notifications", "sound", "play-sound-on-first-warning-only"), true, "Only play the notification sound at for the first restart warning.").getBoolean();
+        //playSoundOnFirstWarningOnly = check(config.getNode("timer", "notifications", "sound", "play-sound-on-first-warning-only"), true, "Only play the notification sound at for the first restart warning.").getBoolean();
         playSoundString = check(config.getNode("timer", "notifications", "sound", "sound-to-play"), "block.note.pling", "The sound that should play for the notification. (Vanilla sounds can be found here: http://minecraft.gamepedia.com/Sounds.json)").getString();
         playSoundFirstTime = check(config.getNode("timer", "notifications", "sound", "when-to-start"), 10, "When should the sound notification start? (This should be the same as one of your broadcast timers)").getDouble();
 
@@ -114,7 +114,7 @@ public class Config {
         }
         return node;
     }
-    private CommentedConfigurationNode checkList(CommentedConfigurationNode node, Double[] defaultValue, String comment) {
+    private CommentedConfigurationNode checkList(CommentedConfigurationNode node, Integer[] defaultValue, String comment) {
         if (node.isVirtual()) {
             node.setValue(Arrays.asList(defaultValue)).setComment(comment);
         }
