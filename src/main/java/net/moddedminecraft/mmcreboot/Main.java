@@ -1,5 +1,6 @@
 package net.moddedminecraft.mmcreboot;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.google.inject.Inject;
 import net.moddedminecraft.mmcreboot.Tasks.ShutdownTask;
 import net.moddedminecraft.mmcreboot.commands.*;
@@ -12,7 +13,7 @@ import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.DefaultConfig;
-import org.spongepowered.api.effect.sound.SoundTypes;
+import org.spongepowered.api.effect.sound.SoundType;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.GameReloadEvent;
@@ -29,6 +30,7 @@ import org.spongepowered.api.text.chat.ChatTypes;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.serializer.TextSerializers;
 import org.spongepowered.api.text.title.Title;
+import org.spongepowered.api.world.World;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +38,7 @@ import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -82,6 +85,9 @@ public class Main {
     private ArrayList<Timer> warningTimers = new ArrayList<Timer>();
     private Timer rebootTimer;
     private Timer justStartedTimer;
+
+    private boolean playSoundNow = false;
+    private Vector3d soundLoc = new Vector3d(0, 64, 0);
 
     private Config config;
 
@@ -286,49 +292,40 @@ public class Main {
 
                         NumberFormat formatter = new DecimalFormat("00");
                         String s = formatter.format(seconds);
-
-                        if (reason != null) {
-                            if (minutes > 1) {
-                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
-                            } else if (minutes == 1) {
-                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
-                            } else if (minutes < 1) {
-                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
-                            } else {
-                                logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
-                            }
-                            for(Player p : Sponge.getServer().getOnlinePlayers()) {
-                                if (Config.playSoundEnabled) {
-                                    p.playSound(SoundTypes.BLOCK_NOTE_PLING, p.getLocation().getPosition(), 2);
-                                }
-                                if (Config.titleEnabled) {
-                                    p.sendTitle(Title.builder().subtitle(fromLegacy(Config.titleMessage.replace("{hours}",  ""+hours).replace("{minutes}",  ""+minutes).replace("{seconds}",  ""+s)))
-                                            .fadeIn(20).fadeOut(20).stay(Config.titleStayTime).build());
-                                }
-                            }
-                            broadcastMessage("&f[&6Restart&f] &d" + reason);
-                            isRestarting = true;
+                        if (minutes > 1) {
+                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
+                        } else if (minutes == 1) {
+                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
+                        } else if (minutes < 1) {
+                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
                         } else {
-                            if (minutes > 1) {
-                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
-                            } else if (minutes == 1) {
-                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
-                            } else if (minutes < 1) {
-                                broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
-                            } else {
-                                logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
-                            }
-                            for(Player p : Sponge.getServer().getOnlinePlayers()) {
-                                if (Config.playSoundEnabled) {
-                                    p.playSound(SoundTypes.BLOCK_NOTE_PLING, p.getLocation().getPosition(), 2);
-                                }
-                                if (Config.titleEnabled) {
-                                    p.sendTitle(Title.builder().subtitle(fromLegacy(Config.titleMessage.replace("{hours}",  ""+hours).replace("{minutes}",  ""+minutes).replace("{seconds}",  ""+s)))
-                                            .fadeIn(20).fadeOut(20).stay(Config.titleStayTime * 20).build());
-                                }
-                            }
-                            isRestarting = true;
+                            logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
                         }
+                        if (!playSoundNow && Config.playSoundFirstTime >= aTimerBroadcast) {
+                            playSoundNow = true;
+                        }
+                        for (World w : Sponge.getServer().getWorlds()) {
+                            if (Config.playSoundEnabled && playSoundNow) {
+                                Optional<SoundType> sound = Sponge.getGame().getRegistry().getType(SoundType.class, Config.playSoundString);
+                                SoundType playSound;
+                                if (sound.isPresent()) {
+                                    playSound = sound.get();
+                                } else {
+                                    playSound = Sponge.getGame().getRegistry().getType(SoundType.class, "block.note.pling").get();
+                                }
+                                w.playSound(playSound, soundLoc, 4000);
+                            }
+                        }
+                        for(Player p : Sponge.getServer().getOnlinePlayers()) {
+                            if (Config.titleEnabled) {
+                                p.sendTitle(Title.builder().subtitle(fromLegacy(Config.titleMessage.replace("{hours}",  ""+hours).replace("{minutes}",  ""+minutes).replace("{seconds}",  ""+s)))
+                                        .fadeIn(20).fadeOut(20).stay(Config.titleStayTime * 20).build());
+                            }
+                        }
+                        if (reason != null) {
+                            broadcastMessage("&f[&6Restart&f] &d" + reason);
+                        }
+                        isRestarting = true;
                     }
                 }, (long) ((Config.restartInterval * 60 - aTimerBroadcast) * 60000.0));
                 logger.info("[MMCReboot] warning scheduled for " + (long) ((Config.restartInterval * 60 - aTimerBroadcast) * 60.0) + " seconds from now!");
@@ -354,6 +351,13 @@ public class Main {
         isRestarting = false;
         TPSRestarting = false;
         usingReason = 0;
+        for (World w : Sponge.getServer().getWorlds()) {
+            if (playSoundNow) {
+                SoundType playSound = Sponge.getGame().getRegistry().getType(SoundType.class, "block.grass.step").get();
+                w.playSound(playSound, soundLoc, 0);
+                playSoundNow = false;
+            }
+        }
     }
 
     public boolean stopServer() {
