@@ -84,7 +84,7 @@ public class Config {
         playSoundEnabled = check(config.getNode("timer", "notifications", "playsound"), true, "Should a sound be played when a restart broadcast is sent?").getBoolean();
         //playSoundOnFirstWarningOnly = check(config.getNode("timer", "notifications", "sound", "play-sound-on-first-warning-only"), true, "Only play the notification sound at for the first restart warning.").getBoolean();
         playSoundString = check(config.getNode("timer", "notifications", "sound", "sound-to-play"), "block.note.pling", "The sound that should play for the notification. (Vanilla sounds can be found here: http://minecraft.gamepedia.com/Sounds.json)").getString();
-        playSoundFirstTime = check(config.getNode("timer", "notifications", "sound", "when-to-start"), 10, "When should the sound notification start? (This should be the same as one of your broadcast timers)").getDouble();
+        playSoundFirstTime = check(config.getNode("timer", "notifications", "sound", "when-to-start"), 600, "When should the sound notification start? (This should be the same as one of your broadcast timers)").getDouble();
 
         titleEnabled = check(config.getNode("timer", "notifications", "title", "enabled"), true, "Should a title message pop up in the middle of the screen").getBoolean();
         titleStayTime = check(config.getNode("timer", "notifications", "title", "staytime"), 2, "How long should the title message show up for before disappearing? (in seconds)").getInt();

@@ -279,57 +279,62 @@ public class Main {
         } else {
             setTPSRestarting(false);
         }
+        double rInterval = Config.restartInterval * 3600;
         if (Config.timerBroadcast != null) {
-            Config.timerBroadcast.stream().filter(aTimerBroadcast -> Config.restartInterval * 60 - aTimerBroadcast > 0).forEach(aTimerBroadcast -> {
-                Timer warnTimer = new Timer();
-                warningTimers.add(warnTimer);
-                warnTimer.schedule(new TimerTask() {
-                    public void run() {
-                        double timeLeft = (Config.restartInterval * 3600) - ((double) (System.currentTimeMillis() - startTimestamp) / 1000);
-                        int hours = (int) (timeLeft / 3600);
-                        int minutes = (int) ((timeLeft - hours * 3600) / 60);
-                        int seconds = (int) timeLeft % 60;
+            for (Integer aTimerBroadcast : Config.timerBroadcast) {
+                if ((rInterval * 60) - aTimerBroadcast > 0) {
+                    Timer warnTimer = new Timer();
+                    warningTimers.add(warnTimer);
+                    if (aTimerBroadcast <= rInterval) {
+                        warnTimer.schedule(new TimerTask() {
+                            public void run() {
+                                double timeLeft = rInterval - ((double) (System.currentTimeMillis() - startTimestamp) / 1000);
+                                int hours = (int) (timeLeft / 3600);
+                                int minutes = (int) ((timeLeft - hours * 3600) / 60);
+                                int seconds = (int) timeLeft % 60;
 
-                        NumberFormat formatter = new DecimalFormat("00");
-                        String s = formatter.format(seconds);
-                        if (minutes > 1) {
-                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
-                        } else if (minutes == 1) {
-                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
-                        } else if (minutes < 1) {
-                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
-                        } else {
-                            logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
-                        }
-                        if (!playSoundNow && Config.playSoundFirstTime >= aTimerBroadcast) {
-                            playSoundNow = true;
-                        }
-                        for (World w : Sponge.getServer().getWorlds()) {
-                            if (Config.playSoundEnabled && playSoundNow) {
-                                Optional<SoundType> sound = Sponge.getGame().getRegistry().getType(SoundType.class, Config.playSoundString);
-                                SoundType playSound;
-                                if (sound.isPresent()) {
-                                    playSound = sound.get();
+                                NumberFormat formatter = new DecimalFormat("00");
+                                String s = formatter.format(seconds);
+                                if (minutes > 1) {
+                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
+                                } else if (minutes == 1) {
+                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
+                                } else if (minutes < 1) {
+                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
                                 } else {
-                                    playSound = Sponge.getGame().getRegistry().getType(SoundType.class, "block.note.pling").get();
+                                    logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
                                 }
-                                w.playSound(playSound, soundLoc, 4000);
+                                if (!playSoundNow && Config.playSoundFirstTime >= aTimerBroadcast) {
+                                    playSoundNow = true;
+                                }
+                                for (World w : Sponge.getServer().getWorlds()) {
+                                    if (Config.playSoundEnabled && playSoundNow) {
+                                        Optional<SoundType> sound = Sponge.getGame().getRegistry().getType(SoundType.class, Config.playSoundString);
+                                        SoundType playSound;
+                                        if (sound.isPresent()) {
+                                            playSound = sound.get();
+                                        } else {
+                                            playSound = Sponge.getGame().getRegistry().getType(SoundType.class, "block.note.pling").get();
+                                        }
+                                        w.playSound(playSound, soundLoc, 4000);
+                                    }
+                                }
+                                for (Player p : Sponge.getServer().getOnlinePlayers()) {
+                                    if (Config.titleEnabled) {
+                                        p.sendTitle(Title.builder().subtitle(fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", "" + s)))
+                                                .fadeIn(20).fadeOut(20).stay(Config.titleStayTime * 20).build());
+                                    }
+                                }
+                                if (reason != null) {
+                                    broadcastMessage("&f[&6Restart&f] &d" + reason);
+                                }
+                                isRestarting = true;
                             }
-                        }
-                        for(Player p : Sponge.getServer().getOnlinePlayers()) {
-                            if (Config.titleEnabled) {
-                                p.sendTitle(Title.builder().subtitle(fromLegacy(Config.titleMessage.replace("{hours}",  ""+hours).replace("{minutes}",  ""+minutes).replace("{seconds}",  ""+s)))
-                                        .fadeIn(20).fadeOut(20).stay(Config.titleStayTime * 20).build());
-                            }
-                        }
-                        if (reason != null) {
-                            broadcastMessage("&f[&6Restart&f] &d" + reason);
-                        }
-                        isRestarting = true;
+                        }, (long) ((rInterval * 60 - aTimerBroadcast) * 1000.0));
+                        logger.info("[MMCReboot] warning scheduled for " + (rInterval * 60 - aTimerBroadcast) + " seconds from now!");
                     }
-                }, (long) ((Config.restartInterval * 60 - aTimerBroadcast) * 60000.0));
-                logger.info("[MMCReboot] warning scheduled for " + (long) ((Config.restartInterval * 60 - aTimerBroadcast) * 60.0) + " seconds from now!");
-            });
+                }
+            }
         }
         rebootTimer = new Timer();
         rebootTimer.schedule(new ShutdownTask(this), (long) (Config.restartInterval * 3600000.0));

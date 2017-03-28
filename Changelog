@@ -1,0 +1,9 @@
+v1.8
+BREAKING CONFIG CHANGE!!
+
+Changes
+ - timer.broadcast config now uses seconds instead of minutes. - BREAKING CHANGE
+
+Added
+ - Config option to change sound notification
+ - Config option for when the first sound notification should play (Use one of the values from your timer.broadcast config list)
