@@ -380,7 +380,7 @@ public class Main {
             Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "save-all");
             Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "stop");
         } catch (Exception e) {
-            logger.info("[MMCReboot] Something went wrong while saving & stoping!");
+            logger.info("[MMCReboot] Something went wrong while saving & stopping!");
             return false;
         }
         return true;
