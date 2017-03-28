@@ -281,8 +281,7 @@ public class Main {
         }
         double rInterval = Config.restartInterval * 3600;
         if (Config.timerBroadcast != null) {
-            for (Integer aTimerBroadcast : Config.timerBroadcast) {
-                if ((rInterval * 60) - aTimerBroadcast > 0) {
+            Config.timerBroadcast.stream().filter(aTimerBroadcast -> rInterval * 60 - aTimerBroadcast > 0).forEach(aTimerBroadcast -> {
                     Timer warnTimer = new Timer();
                     warningTimers.add(warnTimer);
                     if (aTimerBroadcast <= rInterval) {
@@ -330,11 +329,10 @@ public class Main {
                                 }
                                 isRestarting = true;
                             }
-                        }, (long) ((rInterval * 60 - aTimerBroadcast) * 1000.0));
-                        logger.info("[MMCReboot] warning scheduled for " + (rInterval * 60 - aTimerBroadcast) + " seconds from now!");
+                        }, (long) (((Config.restartInterval * 3600) - aTimerBroadcast) * 1000.0));
+                        logger.info("[MMCReboot] warning scheduled for " + (long) (rInterval - aTimerBroadcast) + " seconds from now!");
                     }
-                }
-            }
+            });
         }
         rebootTimer = new Timer();
         rebootTimer.schedule(new ShutdownTask(this), (long) (Config.restartInterval * 3600000.0));
