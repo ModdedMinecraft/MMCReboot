@@ -75,95 +75,91 @@ public class RebootVote implements CommandExecutor {
 
             if (!src.hasPermission("mmcreboot.reboot.bypass") && Sponge.getServer().getOnlinePlayers().size() < Config.timerMinplayers) {
                 throw new CommandException(plugin.fromLegacy("&4There must be a minimum of " + Config.timerMinplayers + " players online to start a vote"));
+            }
+            if (!src.hasPermission("mmcreboot.reboot.bypass") && plugin.justStarted) {
+                throw new CommandException(plugin.fromLegacy("&4The server needs to be online for " + Config.timerStartvote + " minutes before starting a vote!"));
+            }
+            if (plugin.isRestarting && minutes <= 10) {
+                throw new CommandException(plugin.fromLegacy("&4The server is already restarting!"));
+            }
+            if (!src.hasPermission("mmcreboot.reboot.bypass") && !Config.voteEnabled) {
+                throw new CommandException(plugin.fromLegacy("&4Voting to restart is disabled"));
+            }
+            if (plugin.cdTimer == 1) {
+                throw new CommandException(plugin.fromLegacy("&4You need to wait " + Config.timerRevote + " minutes before starting another vote!"));
+            }
+            if (plugin.hasVoted.contains(src)) {
+                throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
+            }
+            if (!src.hasPermission("mmcreboot.reboot.bypass") && !src.hasPermission("mmcreboot.reboot.vote")) {
+                throw new CommandException(plugin.fromLegacy("&4You don't have permission to do this!"));
+            }
+
+            if (plugin.voteStarted) {
+                throw new CommandException(plugin.fromLegacy("&4A vote is already running"));
+            }
+
+            if (src instanceof Player) {
+                Player player = (Player) src;
+                plugin.voteStarted = true;
+                plugin.voteCancel = 0;
+                plugin.hasVoted.add(player);
+                plugin.yesVotes += 1;
+                plugin.noVotes = 0;
+                plugin.voteSeconds = 90;
+                plugin.displayVotes();
             } else {
-                if (plugin.isRestarting && minutes <= 10) {
-                    throw new CommandException(plugin.fromLegacy("&4The server is already restarting!"));
-                } else {
-                    if (!src.hasPermission("mmcreboot.reboot.bypass") && plugin.justStarted) {
-                        throw new CommandException(plugin.fromLegacy("&4The server needs to be online for " + Config.timerStartvote + " minutes before starting a vote!"));
+                plugin.voteStarted = true;
+                plugin.displayVotes();
+            }
+
+
+            plugin.broadcastMessage("&3---------- Restart ----------");
+            plugin.broadcastMessage("&a" + src.getName() + " &bhas voted that the server should be restarted");
+            plugin.broadcastMessage("&6Type &a/reboot vote yes &6if you agree");
+            plugin.broadcastMessage("&6Type &c/reboot vote no &6if you do not agree");
+            plugin.broadcastMessage("&6If there are more yes votes than no, The server will be restarted! (minimum of " + Config.timerMinplayers + ")");
+            plugin.broadcastMessage("&bYou have &a90 &bseconds to vote!");
+            plugin.broadcastMessage("&3----------------------------");
+
+            Timer voteTimer = new Timer();
+            voteTimer.schedule(new TimerTask() {
+                public void run() {
+                    int Online = Sponge.getServer().getOnlinePlayers().size();
+                    float percentage = plugin.yesVotes/Online *100;
+
+                    if ((plugin.yesVotes > plugin.noVotes) && (plugin.voteCancel == 0) && (plugin.yesVotes >= Config.timerMinplayers) && (percentage >= Config.timerVotepercent)) {
+                        plugin.removeScoreboard();
+                        plugin.yesVotes = 0;
+                        plugin.cdTimer = 1;
+                        plugin.voteStarted = false;
+                        plugin.hasVoted.clear();
+                        plugin.isRestarting = true;
+                        Config.restartInterval = (Config.timerVotepassed + 1) / 3600.0;
+                        plugin.logger.info("[MMCReboot] scheduling restart tasks...");
+                        plugin.usingReason = 1;
+                        plugin.reason = "Players have voted to restart the server.";
+                        plugin.scheduleTasks();
                     } else {
-                        if (!src.hasPermission("mmcreboot.reboot.bypass") && !Config.voteEnabled) {
-                            throw new CommandException(plugin.fromLegacy("&4Voting to restart is disabled"));
-                        } else {
-                            if (plugin.cdTimer == 1) {
-                                throw new CommandException(plugin.fromLegacy("&4You need to wait " + Config.timerRevote + " minutes before starting another vote!"));
-                            } else if (plugin.hasVoted.contains(src)) {
-                                throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
-                            } else {
-                                if (!src.hasPermission("mmcreboot.reboot.bypass") && !src.hasPermission("mmcreboot.reboot.vote")) {
-                                    throw new CommandException(plugin.fromLegacy("&4You don't have permission to do this!"));
-                                } else {
-                                    if (plugin.voteStarted) {
-                                        throw new CommandException(plugin.fromLegacy("&4A vote is already running"));
-                                    }
-                                    if (src instanceof Player) {
-                                        Player player = (Player) src;
-                                        plugin.voteStarted = true;
-                                        plugin.voteCancel = 0;
-                                        plugin.hasVoted.add(player);
-                                        plugin.yesVotes += 1;
-                                        plugin.noVotes = 0;
-                                        plugin.voteSeconds = 90;
-                                        plugin.displayVotes();
-                                    } else {
-                                        plugin.voteStarted = true;
-                                        plugin.displayVotes();
-                                    }
-
-
-                                    plugin.broadcastMessage("&3---------- Restart ----------");
-                                    plugin.broadcastMessage("&a" + src.getName() + " &bhas voted that the server should be restarted");
-                                    plugin.broadcastMessage("&6Type &a/reboot vote yes &6if you agree");
-                                    plugin.broadcastMessage("&6Type &c/reboot vote no &6if you do not agree");
-                                    plugin.broadcastMessage("&6If there are more yes votes than no, The server will be restarted! (minimum of " + Config.timerMinplayers + ")");
-                                    plugin.broadcastMessage("&bYou have &a90 &bseconds to vote!");
-                                    plugin.broadcastMessage("&3----------------------------");
-
-                                    Timer voteTimer = new Timer();
-                                    voteTimer.schedule(new TimerTask() {
-                                        public void run() {
-                                            int Online = Sponge.getServer().getOnlinePlayers().size();
-                                            float percentage = plugin.yesVotes/Online *100;
-
-                                            if ((plugin.yesVotes > plugin.noVotes) && (plugin.voteCancel == 0) && (plugin.yesVotes >= Config.timerMinplayers) && (percentage >= Config.timerVotepercent)) {
-                                                plugin.removeScoreboard();
-                                                plugin.yesVotes = 0;
-                                                plugin.cdTimer = 1;
-                                                plugin.voteStarted = false;
-                                                plugin.hasVoted.clear();
-                                                plugin.isRestarting = true;
-                                                Config.restartInterval = (Config.timerVotepassed + 1) / 3600.0;
-                                                plugin.logger.info("[MMCReboot] scheduling restart tasks...");
-                                                plugin.usingReason = 1;
-                                                plugin.reason = "Players have voted to restart the server.";
-                                                plugin.scheduleTasks();
-                                            } else {
-                                                if (plugin.voteCancel == 0) {
-                                                    plugin.broadcastMessage("&f[&6Restart&f] &3The server will not be restarted. Not enough people have voted.");
-                                                }
-                                                plugin.yesVotes = 0;
-                                                plugin.cdTimer = 1;
-                                                plugin.voteCancel = 0;
-                                                plugin.voteStarted = false;
-                                                plugin.usingReason = 0;
-                                                plugin.removeScoreboard();
-                                                plugin.hasVoted.clear();
-                                                Timer voteTimer = new Timer();
-                                                voteTimer.schedule(new TimerTask() {
-                                                    public void run() {
-                                                        plugin.cdTimer = 0;
-                                                    }
-                                                }, (long) (Config.timerRevote * 60000.0));
-                                            }
-                                        }
-                                    }, 90000);
-                                }
-
-                            }
+                        if (plugin.voteCancel == 0) {
+                            plugin.broadcastMessage("&f[&6Restart&f] &3The server will not be restarted. Not enough people have voted.");
                         }
+                        plugin.yesVotes = 0;
+                        plugin.cdTimer = 1;
+                        plugin.voteCancel = 0;
+                        plugin.voteStarted = false;
+                        plugin.usingReason = 0;
+                        plugin.removeScoreboard();
+                        plugin.hasVoted.clear();
+                        Timer voteTimer = new Timer();
+                        voteTimer.schedule(new TimerTask() {
+                            public void run() {
+                                plugin.cdTimer = 0;
+                            }
+                        }, (long) (Config.timerRevote * 60000.0));
                     }
                 }
-            }
+            }, 90000);
         }
         return CommandResult.success();
     }
