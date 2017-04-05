@@ -1,6 +1,7 @@
 package net.moddedminecraft.mmcreboot.commands;
 
-import net.moddedminecraft.mmcreboot.Config;
+import net.moddedminecraft.mmcreboot.Config.Config;
+import net.moddedminecraft.mmcreboot.Config.Permissions;
 import net.moddedminecraft.mmcreboot.Main;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -27,77 +28,93 @@ public class RebootVote implements CommandExecutor {
 
         if (optional.isPresent()) {
             String op = optional.get();
-            if (op.equals("on") && src.hasPermission("mmcreboot.reboot.toggle.vote")) {
-                Config.voteEnabled = true;
-                Config.config.getNode("voting", "enabled").setValue("true");
-                return CommandResult.success();
-            }
-            if (op.equals("off") && src.hasPermission("mmcreboot.reboot.toggle.vote")) {
-                Config.voteEnabled = false;
-                Config.config.getNode("voting", "enabled").setValue("false");
-                return CommandResult.success();
-            }
-            if (op.equals("yes")) {
-                if (plugin.hasVoted.contains(src)) {
-                    throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
-                } else if (plugin.voteStarted) {
-                    plugin.yesVotes += 1;
-                    if (src instanceof Player) {
-                        plugin.hasVoted.add((Player) src);
+            switch (op) {
+                case "on":
+                    if (src.hasPermission(Permissions.TOGGLE_VOTE)) {
+                        Config.voteEnabled = true;
+                        Config.config.getNode("voting", "enabled").setValue("true");
+                        return CommandResult.success();
+                    } else {
+                        return CommandResult.empty();
                     }
-                    plugin.displayVotes();
-                    plugin.sendMessage(src, "You Voted Yes!");
-                    return CommandResult.success();
-                } else {
-                    throw new CommandException(plugin.fromLegacy("&4There is no vote running at the moment"));
-                }
-            }
-            if (op.equals("no")) {
-                if (plugin.hasVoted.contains(src)) {
-                    throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
-                } else if (plugin.voteStarted) {
-                    plugin.noVotes += 1;
-                    if (src instanceof Player) {
-                        plugin.hasVoted.add((Player) src);
-                    }
-                    plugin.displayVotes();
-                    plugin.sendMessage(src, "You Voted No!");
-                    return CommandResult.success();
 
-                } else {
-                    throw new CommandException(plugin.fromLegacy("&4There is no vote running at the moment"));
-                }
+                case "off":
+                    if (src.hasPermission(Permissions.TOGGLE_VOTE)) {
+                        Config.voteEnabled = false;
+                        Config.config.getNode("voting", "enabled").setValue("false");
+                        return CommandResult.success();
+                    } else {
+                        return CommandResult.empty();
+                    }
+
+                case "yes":
+                    if (plugin.hasVoted.contains(src)) {
+                        throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
+                    }
+                    if (plugin.voteStarted) {
+                        plugin.yesVotes += 1;
+                        if (src instanceof Player) {
+                            plugin.hasVoted.add((Player) src);
+                        }
+                        plugin.displayVotes();
+                        plugin.sendMessage(src, "You Voted Yes!");
+                        return CommandResult.success();
+                    } else {
+                        throw new CommandException(plugin.fromLegacy("&4There is no vote running at the moment"));
+                    }
+
+                case "no":
+                    if (plugin.hasVoted.contains(src)) {
+                        throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
+                    }
+                    if (plugin.voteStarted) {
+                        plugin.noVotes += 1;
+                        if (src instanceof Player) {
+                            plugin.hasVoted.add((Player) src);
+                        }
+                        plugin.displayVotes();
+                        plugin.sendMessage(src, "You Voted No!");
+                        return CommandResult.success();
+
+                    } else {
+                        throw new CommandException(plugin.fromLegacy("&4There is no vote running at the moment"));
+                    }
+
+                default:
+                    return CommandResult.empty();
+                    //break;
+
             }
         } else {
             double timeLeft = (Config.restartInterval * 3600) - ((double) (System.currentTimeMillis() - plugin.startTimestamp) / 1000);
             int hours = (int) (timeLeft / 3600);
             int minutes = (int) ((timeLeft - hours * 3600) / 60);
 
-            if (!src.hasPermission("mmcreboot.reboot.bypass") && Sponge.getServer().getOnlinePlayers().size() < Config.timerMinplayers) {
-                throw new CommandException(plugin.fromLegacy("&4There must be a minimum of " + Config.timerMinplayers + " players online to start a vote"));
+            if (!src.hasPermission(Permissions.BYPASS) && !src.hasPermission(Permissions.COMMAND_VOTE)) {
+                throw new CommandException(plugin.fromLegacy("&4You don't have permission to do this!"));
             }
-            if (!src.hasPermission("mmcreboot.reboot.bypass") && plugin.justStarted) {
-                throw new CommandException(plugin.fromLegacy("&4The server needs to be online for " + Config.timerStartvote + " minutes before starting a vote!"));
-            }
-            if (plugin.isRestarting && minutes <= 10) {
-                throw new CommandException(plugin.fromLegacy("&4The server is already restarting!"));
-            }
-            if (!src.hasPermission("mmcreboot.reboot.bypass") && !Config.voteEnabled) {
+            if (!src.hasPermission(Permissions.BYPASS) && !Config.voteEnabled) {
                 throw new CommandException(plugin.fromLegacy("&4Voting to restart is disabled"));
-            }
-            if (plugin.cdTimer == 1) {
-                throw new CommandException(plugin.fromLegacy("&4You need to wait " + Config.timerRevote + " minutes before starting another vote!"));
             }
             if (plugin.hasVoted.contains(src)) {
                 throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
             }
-            if (!src.hasPermission("mmcreboot.reboot.bypass") && !src.hasPermission("mmcreboot.reboot.vote")) {
-                throw new CommandException(plugin.fromLegacy("&4You don't have permission to do this!"));
-            }
-
             if (plugin.voteStarted) {
                 throw new CommandException(plugin.fromLegacy("&4A vote is already running"));
             }
+            if (!src.hasPermission(Permissions.BYPASS) && plugin.justStarted) {
+                throw new CommandException(plugin.fromLegacy("&4The server needs to be online for " + Config.timerStartvote + " minutes before starting a vote!"));
+            }
+            if (!src.hasPermission(Permissions.BYPASS) && Sponge.getServer().getOnlinePlayers().size() < Config.timerMinplayers) {
+                throw new CommandException(plugin.fromLegacy("&4There must be a minimum of " + Config.timerMinplayers + " players online to start a vote"));
+            }
+            if (plugin.isRestarting && minutes <= 10) {
+                throw new CommandException(plugin.fromLegacy("&4The server is already restarting!"));
+            }
+            if (plugin.cdTimer == 1) {
+                throw new CommandException(plugin.fromLegacy("&4You need to wait " + Config.timerRevote + " minutes before starting another vote!"));
+            }
+
 
             if (src instanceof Player) {
                 Player player = (Player) src;
@@ -160,7 +177,7 @@ public class RebootVote implements CommandExecutor {
                     }
                 }
             }, 90000);
+            return CommandResult.success();
         }
-        return CommandResult.success();
     }
 }

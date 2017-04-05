@@ -1,12 +1,14 @@
 v2.0
-BREAKING CONFIG CHANGE!!
+BREAKING CONFIG CHANGE(S)!! - Recommended config reset
 
 Changes
  - timer.broadcast config now uses seconds instead of minutes. - BREAKING CHANGE
+ - Config for autorestart timer now split into Fixed and Realtime
 
 Added
  - Config option to change sound notification
  - Config option for when the first sound notification should play (Use one of the values from your timer.broadcast config list)
+ - Realtime restart timer - Restart at specific times of the day (Server hosted location's timezone)
 
 Fixes
  - Check online time before isRestarting when initiating a /reboot vote

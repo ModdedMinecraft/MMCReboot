@@ -1,6 +1,7 @@
-package net.moddedminecraft.mmcreboot;
+package net.moddedminecraft.mmcreboot.Config;
 
 import com.google.common.reflect.TypeToken;
+import net.moddedminecraft.mmcreboot.Main;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
@@ -34,8 +35,19 @@ public class Config {
             30
     };
 
-    public static boolean restartEnabled;
+    private String[] RealTimeList = {
+            "00:00",
+            "06:00",
+            "12:00",
+            "18:00"
+    };
+
+    public static String restartType;
     public static double restartInterval;
+
+    //public static boolean realTimeEnabled;
+    public static List<String> realTimeInterval;
+
     public static List<Integer> timerBroadcast;
     public static int timerRevote;
     public static int timerStartvote;
@@ -71,8 +83,9 @@ public class Config {
             plugin.defaultConfFile.createNewFile();
         }
 
-        restartEnabled = check(config.getNode("autorestart", "enabled"), true, "Enable / Disable automatic restarts after the designated interval time.").getBoolean();
-        restartInterval = check(config.getNode("autorestart", "interval"), 6, "How long in hours should the auto restart timer be set for?").getInt();
+        restartType = check(config.getNode("autorestart", "enabled"), "Fixed", "Values: Fixed, Realtime or None. The value choses here represents what timer will be used.").getString();
+        restartInterval = check(config.getNode("autorestart", "fixed" ,"interval"), 6, "How long in hours should the auto restart timer be set for?").getInt();
+        realTimeInterval = checkList(config.getNode("autorestart", "realtime" ,"intervals"), RealTimeList, "How long in hours should the auto restart timer be set for?").getList(TypeToken.of(String.class));
 
         timerBroadcast = checkList(config.getNode("timer", "broadcast"), timerBroadcastList, "warning times before reboot in minutes (0.5 = 30 seconds)").getList(TypeToken.of(Integer.class));
         timerRevote =  check(config.getNode("timer", "re-vote"), 10, "Time before another vote to restart can begin. (In minutes)  ").getInt();
@@ -115,6 +128,12 @@ public class Config {
         return node;
     }
     private CommentedConfigurationNode checkList(CommentedConfigurationNode node, Integer[] defaultValue, String comment) {
+        if (node.isVirtual()) {
+            node.setValue(Arrays.asList(defaultValue)).setComment(comment);
+        }
+        return node;
+    }
+    private CommentedConfigurationNode checkList(CommentedConfigurationNode node, String[] defaultValue, String comment) {
         if (node.isVirtual()) {
             node.setValue(Arrays.asList(defaultValue)).setComment(comment);
         }

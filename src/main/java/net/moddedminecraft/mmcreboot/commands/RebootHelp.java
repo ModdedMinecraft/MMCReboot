@@ -1,5 +1,6 @@
 package net.moddedminecraft.mmcreboot.commands;
 
+import net.moddedminecraft.mmcreboot.Config.Permissions;
 import net.moddedminecraft.mmcreboot.Main;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -31,11 +32,11 @@ public class RebootHelp implements CommandExecutor {
 
         List<Text> contents = new ArrayList<>();
         contents.add(plugin.fromLegacy("&3/reboot &bhelp - &7shows this help"));
-        if (sender.hasPermission("mmcreboot.reboot.now")) contents.add(plugin.fromLegacy("&3/reboot &bnow - &7restarts the server instantly"));
-        if (sender.hasPermission("mmcreboot.reboot.start")) contents.add(plugin.fromLegacy("&3/reboot start &7[&bh&7|&bm&7|&bs&7] &7[&btime&7] &7(&breason&7) &b- &7restart the server after a given time"));
-        if (sender.hasPermission("mmcreboot.reboot.cancel")) contents.add(plugin.fromLegacy("&3/reboot &bcancel - &7cancel any current restart timer"));
-        if (sender.hasPermission("mmcreboot.reboot.vote")) contents.add(plugin.fromLegacy("&3/reboot &bvote - &7starts a vote to restart the server"));
-        if (sender.hasPermission("mmcreboot.reboot.time")) contents.add(plugin.fromLegacy("&3/reboot &btime - &7informs you how much time is left before restarting"));
+        if (sender.hasPermission(Permissions.COMMAND_NOW)) contents.add(plugin.fromLegacy("&3/reboot &bnow - &7restarts the server instantly"));
+        if (sender.hasPermission(Permissions.COMMAND_START)) contents.add(plugin.fromLegacy("&3/reboot start &7[&bh&7|&bm&7|&bs&7] &7[&btime&7] &7(&breason&7) &b- &7restart the server after a given time"));
+        if (sender.hasPermission(Permissions.COMMAND_CANCEL)) contents.add(plugin.fromLegacy("&3/reboot &bcancel - &7cancel any current restart timer"));
+        if (sender.hasPermission(Permissions.COMMAND_VOTE)) contents.add(plugin.fromLegacy("&3/reboot &bvote - &7starts a vote to restart the server"));
+        if (sender.hasPermission(Permissions.COMMAND_TIME)) contents.add(plugin.fromLegacy("&3/reboot &btime - &7informs you how much time is left before restarting"));
         contents.add(plugin.fromLegacy("&3/reboot &bvote yes - &7vote yes to restart the server"));
         contents.add(plugin.fromLegacy("&3/reboot &bvote no - &7vote no to restart the server"));
 

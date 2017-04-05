@@ -1,5 +1,6 @@
 package net.moddedminecraft.mmcreboot;
 
+import net.moddedminecraft.mmcreboot.Config.Config;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;

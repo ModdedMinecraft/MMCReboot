@@ -1,6 +1,6 @@
 package net.moddedminecraft.mmcreboot.Tasks;
 
-import net.moddedminecraft.mmcreboot.Config;
+import net.moddedminecraft.mmcreboot.Config.Config;
 import net.moddedminecraft.mmcreboot.Main;
 
 import java.util.TimerTask;

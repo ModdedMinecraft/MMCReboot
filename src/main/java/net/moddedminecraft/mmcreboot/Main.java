@@ -2,6 +2,8 @@ package net.moddedminecraft.mmcreboot;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.google.inject.Inject;
+import net.moddedminecraft.mmcreboot.Config.Config;
+import net.moddedminecraft.mmcreboot.Config.Permissions;
 import net.moddedminecraft.mmcreboot.Tasks.ShutdownTask;
 import net.moddedminecraft.mmcreboot.commands.*;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -37,11 +39,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Plugin(id = "mmcreboot", name = "MMCReboot", version = "1.7.1", authors = {"Leelawd93"})
 public class Main {
@@ -80,6 +81,8 @@ public class Main {
     public boolean isRestarting = false;
     public boolean TPSRestarting = false;
     public int rebootConfirm = 0;
+    public boolean tasksScheduled = false;
+    public double nextRealTimeRestart;
 
     // Timers
     private ArrayList<Timer> warningTimers = new ArrayList<Timer>();
@@ -87,7 +90,7 @@ public class Main {
     private Timer justStartedTimer;
 
     private boolean playSoundNow = false;
-    private Vector3d soundLoc = new Vector3d(0, 64, 0);
+    private Vector3d soundLoc;
 
     private Config config;
 
@@ -105,8 +108,13 @@ public class Main {
 
     @Listener
     public void onServerStart(GameStartedServerEvent event) throws IOException {
-        if(Config.restartEnabled) {
+        int seconds = getTimeUntill("04:30");
+        logger.info("seconds till 04:30 - " + seconds);
+        soundLoc = new Vector3d(0, 64, 0);
+        if(Config.restartType.equalsIgnoreCase("fixed")) {
             scheduleTasks();
+        } else if(Config.restartType.equalsIgnoreCase("realtime")) {
+            scheduleRealTimeRestart();
         } else {
             logger.info("[MMCReboot] No automatic restarts scheduled!");
         }
@@ -130,6 +138,7 @@ public class Main {
         logger.info("MMCReboot Loaded");
     }
 
+    @Listener
     public void onServerStop(GameStoppingEvent event) throws IOException {
         cancelTasks();
         logger.info("MMCReboot Disabled");
@@ -143,8 +152,10 @@ public class Main {
 
         this.config = new Config(this);
 
-        if(Config.restartEnabled) {
+        if(Config.restartType.equalsIgnoreCase("fixed")) {
             scheduleTasks();
+        } else if(Config.restartType.equalsIgnoreCase("realtime")) {
+            scheduleRealTimeRestart();
         } else {
             logger.info("[MMCReboot] No automatic restarts scheduled!");
         }
@@ -165,34 +176,34 @@ public class Main {
         // /Reboot cancel
         CommandSpec cancel = CommandSpec.builder()
                 .description(Text.of("Cancel the current timed reboot"))
-                .permission("mmcreboot.reboot.cancel")
+                .permission(Permissions.COMMAND_CANCEL)
                 .executor(new RebootCancel(this))
                 .build();
 
         // /Reboot time
         CommandSpec time = CommandSpec.builder()
                 .description(Text.of("Get the time remaining until the next restart"))
-                .permission("mmcreboot.reboot.time")
+                .permission(Permissions.COMMAND_TIME)
                 .executor(new RebootTime(this))
                 .build();
 
         // /Reboot confirm
         CommandSpec confirm = CommandSpec.builder()
                 .description(Text.of("Reboot the server immediately"))
-                .permission("mmcreboot.reboot.now")
+                .permission(Permissions.COMMAND_NOW)
                 .executor(new RebootConfirm(this))
                 .build();
         // /Reboot now
         CommandSpec now = CommandSpec.builder()
                 .description(Text.of("Reboot the server immediately"))
-                .permission("mmcreboot.reboot.now")
+                .permission(Permissions.COMMAND_NOW)
                 .executor(new RebootNow(this))
                 .build();
 
         // /Reboot start h/m/s time reason
         CommandSpec start = CommandSpec.builder()
                 .description(Text.of("Reboot base command"))
-                .permission("mmcreboot.reboot.start")
+                .permission(Permissions.COMMAND_START)
                 .arguments(GenericArguments.string(Text.of("h/m/s")),
                         GenericArguments.integer(Text.of("time")),
                         GenericArguments.optional(GenericArguments.remainingJoinedStrings(Text.of("reason"))))
@@ -271,6 +282,23 @@ public class Main {
         }
     }
 
+    public int getNextRealTimeFromConfig() {
+        int timeTill = 0;
+        if (Config.restartType.equalsIgnoreCase("realtime")) {
+            for (String realTime : Config.realTimeInterval) {
+                timeTill = getTimeUntill(realTime);
+            }
+        }
+        return timeTill;
+    }
+
+    public void scheduleRealTimeRestart() {
+        double rInterval = nextRealTimeRestart * 3600;
+        if (Config.timerBroadcast != null) {
+            warngingMessages(rInterval);
+        }
+    }
+
     public void scheduleTasks() {
         boolean wasTPSRestarting = getTPSRestarting();
         cancelTasks();
@@ -281,66 +309,70 @@ public class Main {
         }
         double rInterval = Config.restartInterval * 3600;
         if (Config.timerBroadcast != null) {
-            Config.timerBroadcast.stream().filter(aTimerBroadcast -> rInterval * 60 - aTimerBroadcast > 0).forEach(aTimerBroadcast -> {
-                    Timer warnTimer = new Timer();
-                    warningTimers.add(warnTimer);
-                    if (aTimerBroadcast <= rInterval) {
-                        warnTimer.schedule(new TimerTask() {
-                            public void run() {
-                                double timeLeft = rInterval - ((double) (System.currentTimeMillis() - startTimestamp) / 1000);
-                                int hours = (int) (timeLeft / 3600);
-                                int minutes = (int) ((timeLeft - hours * 3600) / 60);
-                                int seconds = (int) timeLeft % 60;
-
-                                NumberFormat formatter = new DecimalFormat("00");
-                                String s = formatter.format(seconds);
-                                if (minutes > 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
-                                } else if (minutes == 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
-                                } else if (minutes < 1) {
-                                    broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
-                                } else {
-                                    logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
-                                }
-                                if (!playSoundNow && Config.playSoundFirstTime >= aTimerBroadcast) {
-                                    playSoundNow = true;
-                                }
-                                for (World w : Sponge.getServer().getWorlds()) {
-                                    if (Config.playSoundEnabled && playSoundNow) {
-                                        Optional<SoundType> sound = Sponge.getGame().getRegistry().getType(SoundType.class, Config.playSoundString);
-                                        SoundType playSound;
-                                        if (sound.isPresent()) {
-                                            playSound = sound.get();
-                                        } else {
-                                            playSound = Sponge.getGame().getRegistry().getType(SoundType.class, "block.note.pling").get();
-                                        }
-                                        w.playSound(playSound, soundLoc, 4000);
-                                    }
-                                }
-                                for (Player p : Sponge.getServer().getOnlinePlayers()) {
-                                    if (Config.titleEnabled) {
-                                        p.sendTitle(Title.builder().subtitle(fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", "" + s)))
-                                                .fadeIn(20).fadeOut(20).stay(Config.titleStayTime * 20).build());
-                                    }
-                                }
-                                if (reason != null) {
-                                    broadcastMessage("&f[&6Restart&f] &d" + reason);
-                                }
-                                isRestarting = true;
-                            }
-                        }, (long) (((Config.restartInterval * 3600) - aTimerBroadcast) * 1000.0));
-                        logger.info("[MMCReboot] warning scheduled for " + (long) (rInterval - aTimerBroadcast) + " seconds from now!");
-                    }
-            });
+            warngingMessages(rInterval);
         }
         rebootTimer = new Timer();
         rebootTimer.schedule(new ShutdownTask(this), (long) (Config.restartInterval * 3600000.0));
 
         logger.info("[MMCReboot] RebootCMD scheduled for " + (long)(Config.restartInterval  * 3600.0) + " seconds from now!");
-        Config.restartEnabled = true;
+        tasksScheduled = true;
         startTimestamp = System.currentTimeMillis();
         isRestarting = true;
+    }
+
+    private void warngingMessages(double rInterval) {
+        Config.timerBroadcast.stream().filter(aTimerBroadcast -> rInterval * 60 - aTimerBroadcast > 0).forEach(aTimerBroadcast -> {
+            Timer warnTimer = new Timer();
+            warningTimers.add(warnTimer);
+            if (aTimerBroadcast <= rInterval) {
+                warnTimer.schedule(new TimerTask() {
+                    public void run() {
+                        double timeLeft = rInterval - ((double) (System.currentTimeMillis() - startTimestamp) / 1000);
+                        int hours = (int) (timeLeft / 3600);
+                        int minutes = (int) ((timeLeft - hours * 3600) / 60);
+                        int seconds = (int) timeLeft % 60;
+
+                        NumberFormat formatter = new DecimalFormat("00");
+                        String s = formatter.format(seconds);
+                        if (minutes > 1) {
+                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
+                        } else if (minutes == 1) {
+                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
+                        } else if (minutes < 1) {
+                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
+                        } else {
+                            logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
+                        }
+                        if (!playSoundNow && Config.playSoundFirstTime >= aTimerBroadcast) {
+                            playSoundNow = true;
+                        }
+                        for (World w : Sponge.getServer().getWorlds()) {
+                            if (Config.playSoundEnabled && playSoundNow) {
+                                Optional<SoundType> sound = Sponge.getGame().getRegistry().getType(SoundType.class, Config.playSoundString);
+                                SoundType playSound;
+                                if (sound.isPresent()) {
+                                    playSound = sound.get();
+                                } else {
+                                    playSound = Sponge.getGame().getRegistry().getType(SoundType.class, "block.note.pling").get();
+                                }
+                                w.playSound(playSound, soundLoc, 4000);
+                            }
+                        }
+                        for (Player p : Sponge.getServer().getOnlinePlayers()) {
+                            if (Config.titleEnabled) {
+                                p.sendTitle(Title.builder().subtitle(fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", "" + s)))
+                                        .fadeIn(20).fadeOut(20).stay(Config.titleStayTime * 20).build());
+                            }
+                        }
+                        if (reason != null) {
+                            broadcastMessage("&f[&6Restart&f] &d" + reason);
+                        }
+                        isRestarting = true;
+                    }
+                }, (long) (((Config.restartInterval * 3600) - aTimerBroadcast) * 1000.0));
+                logger.info("[MMCReboot] warning scheduled for " + (long) (rInterval - aTimerBroadcast) + " seconds from now!");
+            }
+        });
     }
 
     public void cancelTasks() {
@@ -350,18 +382,12 @@ public class Main {
             rebootTimer.cancel();
         }
         rebootTimer = new Timer();
-        Config.restartEnabled = false;
+        tasksScheduled = false;
         isRestarting = false;
         TPSRestarting = false;
         usingReason = 0;
-        for (World w : Sponge.getServer().getWorlds()) {
-            if (playSoundNow) {
-                SoundType playSound = Sponge.getGame().getRegistry().getType(SoundType.class, "block.grass.step").get();
-                w.playSound(playSound, soundLoc, 0);
-                playSoundNow = false;
-            }
-        }
     }
+
 
     public boolean stopServer() {
         logger.info("[MMCReboot] Restarting...");
@@ -387,6 +413,27 @@ public class Main {
             return false;
         }
         return true;
+    }
+
+    public static int getTimeUntill(String time) {
+        Calendar cal = Calendar.getInstance();
+        int nowHour = cal.get(Calendar.HOUR_OF_DAY);
+        int nowMin  = cal.get(Calendar.MINUTE);
+        int nowSec = cal.get(Calendar.SECOND);
+        return getTimeTill(nowHour, nowMin, nowSec, time);
+    }
+
+    private static int getTimeTill(int nowHour, int nowMin, int nowSec, String endTime) {
+        Matcher m = Pattern.compile("(\\d{2}):(\\d{2})").matcher(endTime);
+        if (! m.matches()) {
+            throw new IllegalArgumentException("Invalid time format: " + endTime);
+        }
+        int endHour = Integer.parseInt(m.group(1));
+        int endMin  = Integer.parseInt(m.group(2));
+        if (endHour >= 24 || endMin >= 60) {
+            throw new IllegalArgumentException("Invalid time format: " + endTime);
+        }
+        return (endHour * 60 + endMin - (nowHour * 60 + nowMin)) * 60;
     }
 
     public boolean useCommandOnRestart() {

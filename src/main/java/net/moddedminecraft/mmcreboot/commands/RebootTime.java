@@ -1,6 +1,6 @@
 package net.moddedminecraft.mmcreboot.commands;
 
-import net.moddedminecraft.mmcreboot.Config;
+import net.moddedminecraft.mmcreboot.Config.Config;
 import net.moddedminecraft.mmcreboot.Main;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
