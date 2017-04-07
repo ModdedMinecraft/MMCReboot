@@ -33,7 +33,8 @@ public class EventListener {
                     List<Text> contents = new ArrayList<>();
                     plugin.displayVotes();
                     for (String line : Messages.getRestartVoteBroadcastOnLogin()) {
-                        contents.add(plugin.fromLegacy(line.replace("%config.timerminplayers%", String.valueOf(Config.timerMinplayers))));
+                        String checkLine = line.replace("%config.timerminplayers%", String.valueOf(Config.timerMinplayers));
+                        contents.add(plugin.fromLegacy(checkLine));
                     }
 
                     if (!contents.isEmpty()) {
@@ -44,7 +45,7 @@ public class EventListener {
                                 .sendTo(player);
                     }
                 }
-            }).delay(10, TimeUnit.SECONDS).name("mmcreboot-s-sendVoteOnLogin").submit(this);
+            }).delay(3, TimeUnit.SECONDS).name("mmcreboot-s-sendVoteOnLogin").submit(plugin);
         }
     }
 
