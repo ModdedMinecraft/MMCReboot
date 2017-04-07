@@ -22,15 +22,30 @@ public class RebootTime implements CommandExecutor {
             throw new CommandException(plugin.fromLegacy(Messages.getErrorNoTaskScheduled()));
         }
 
-        double timeLeft = (Config.restartInterval * 3600) - ((double)(System.currentTimeMillis() - plugin.startTimestamp) / 1000);
-        int hours = (int)(timeLeft / 3600);
-        int minutes = (int)((timeLeft - hours * 3600) / 60);
-        int seconds = (int)timeLeft % 60;
+        if(Config.restartType.equalsIgnoreCase("fixed")) {
+            double timeLeft = (Config.restartInterval * 3600) - ((double)(System.currentTimeMillis() - plugin.startTimestamp) / 1000);
+            int hours = (int)(timeLeft / 3600);
+            int minutes = (int)((timeLeft - hours * 3600) / 60);
+            int seconds = (int)timeLeft % 60;
 
-        plugin.sendMessage(src, Messages.getRestartMessageWithoutReason()
-                .replace("%hours%", String.valueOf(hours))
-                .replace("%minutes%", String.valueOf(minutes))
-                .replace("%seconds%", String.valueOf(seconds)));
-        return CommandResult.success();
+            plugin.sendMessage(src, Messages.getRestartMessageWithoutReason()
+                    .replace("%hours%", String.valueOf(hours))
+                    .replace("%minutes%", String.valueOf(minutes))
+                    .replace("%seconds%", String.valueOf(seconds)));
+            return CommandResult.success();
+        } else if(Config.restartType.equalsIgnoreCase("realtime")) {
+            double timeLeft = plugin.nextRealTimeRestart - ((double)(System.currentTimeMillis() - plugin.startTimestamp) / 1000);
+            int hours = (int)(timeLeft / 3600);
+            int minutes = (int)((timeLeft - hours * 3600) / 60);
+            int seconds = (int)timeLeft % 60;
+
+            plugin.sendMessage(src, Messages.getRestartMessageWithoutReason()
+                    .replace("%hours%", String.valueOf(hours))
+                    .replace("%minutes%", String.valueOf(minutes))
+                    .replace("%seconds%", String.valueOf(seconds)));
+            return CommandResult.success();
+        } else {
+            throw new CommandException(plugin.fromLegacy(Messages.getErrorNoTaskScheduled()));
+        }
     }
 }

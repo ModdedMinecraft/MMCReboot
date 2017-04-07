@@ -73,6 +73,7 @@ public class Main {
     public int yesVotes = 0;
     public int noVotes = 0;
     public ArrayList<Player> hasVoted = new ArrayList<Player>();
+    public static ArrayList<Integer> realTimeTimes = new ArrayList<Integer>();
 
     public int voteSeconds;
     public String reason;
@@ -134,6 +135,8 @@ public class Main {
         Sponge.getScheduler().createTaskBuilder().execute(this::action).delay(250, TimeUnit.MILLISECONDS).interval(500,TimeUnit.MILLISECONDS).name("mmcreboot-s-sendAction").submit(this);
 
         Sponge.getScheduler().createTaskBuilder().execute(this::reduceVote).interval(1, TimeUnit.SECONDS).name("mmcreboot-s-reduceVoteCount").submit(this);
+
+        Sponge.getScheduler().createTaskBuilder().execute(this::checkRealTimeRestart).delay(1, TimeUnit.HOURS).interval(15 ,TimeUnit.MINUTES).name("mmcreboot-s-checkRealTimeRestart").submit(this);
 
         Sponge.getScheduler().createTaskBuilder().execute(this::CheckTPSForRestart).delay(Config.tpsCheckDelay, TimeUnit.MINUTES).interval(30, TimeUnit.SECONDS).name("mmcreboot-s-checkTPSForRestart").submit(this);
 
@@ -203,11 +206,19 @@ public class Main {
                 .executor(new RebootNow(this))
                 .build();
 
+        Map<String, String> choices = new HashMap<String, String>() {
+            {
+                put("h", "h");
+                put("m", "m");
+                put("s", "s");
+            }
+        };
+
         // /Reboot start h/m/s time reason
         CommandSpec start = CommandSpec.builder()
                 .description(Text.of("Reboot base command"))
                 .permission(Permissions.COMMAND_START)
-                .arguments(GenericArguments.string(Text.of("h/m/s")),
+                .arguments(GenericArguments.choices(Text.of("h/m/s"), choices),
                         GenericArguments.integer(Text.of("time")),
                         GenericArguments.optional(GenericArguments.remainingJoinedStrings(Text.of("reason"))))
                 .executor(new RebootCMD(this))
@@ -285,21 +296,25 @@ public class Main {
         }
     }
 
-    public int getNextRealTimeFromConfig() {
-        int timeTill = 0;
-        if (Config.restartType.equalsIgnoreCase("realtime")) {
-            for (String realTime : Config.realTimeInterval) {
-                timeTill = getTimeUntill(realTime);
-            }
+    public void checkRealTimeRestart() {
+        if (nextRealTimeRestart == 0 && !isRestarting) {
+            scheduleRealTimeRestart();
         }
-        return timeTill;
     }
 
     public void scheduleRealTimeRestart() {
-        double rInterval = nextRealTimeRestart * 3600;
+        nextRealTimeRestart = getNextRealTimeFromConfig();
+        double rInterval = nextRealTimeRestart;
         if (Config.timerBroadcast != null) {
-            warngingMessages(rInterval);
+            warningMessages(rInterval);
         }
+        rebootTimer = new Timer();
+        rebootTimer.schedule(new ShutdownTask(this), (long) (nextRealTimeRestart * 1000.0));
+
+        logger.info("[MMCReboot] RebootCMD scheduled for " + (long)(nextRealTimeRestart) + " seconds from now!");
+        tasksScheduled = true;
+        startTimestamp = System.currentTimeMillis();
+        isRestarting = true;
     }
 
     public void scheduleTasks() {
@@ -312,7 +327,7 @@ public class Main {
         }
         double rInterval = Config.restartInterval * 3600;
         if (Config.timerBroadcast != null) {
-            warngingMessages(rInterval);
+            warningMessages(rInterval);
         }
         rebootTimer = new Timer();
         rebootTimer.schedule(new ShutdownTask(this), (long) (Config.restartInterval * 3600000.0));
@@ -323,7 +338,7 @@ public class Main {
         isRestarting = true;
     }
 
-    private void warngingMessages(double rInterval) {
+    private void warningMessages(double rInterval) {
         Config.timerBroadcast.stream().filter(aTimerBroadcast -> rInterval * 60 - aTimerBroadcast > 0).forEach(aTimerBroadcast -> {
             Timer warnTimer = new Timer();
             warningTimers.add(warnTimer);
@@ -372,7 +387,7 @@ public class Main {
                         }
                         isRestarting = true;
                     }
-                }, (long) (((Config.restartInterval * 3600) - aTimerBroadcast) * 1000.0));
+                }, (long) ((rInterval - aTimerBroadcast) * 1000.0));
                 logger.info("[MMCReboot] warning scheduled for " + (long) (rInterval - aTimerBroadcast) + " seconds from now!");
             }
         });
@@ -418,15 +433,24 @@ public class Main {
         return true;
     }
 
-    public static int getTimeUntill(String time) {
+    public int getNextRealTimeFromConfig() {
+        realTimeTimes = new ArrayList<Integer>();
+        for (String realTime : Config.realTimeInterval) {
+            int time = getTimeUntil(realTime);
+            realTimeTimes.add(time);
+        }
+        return Collections.min(realTimeTimes);
+    }
+
+    private int getTimeUntil(String time) {
         Calendar cal = Calendar.getInstance();
         int nowHour = cal.get(Calendar.HOUR_OF_DAY);
         int nowMin  = cal.get(Calendar.MINUTE);
-        int nowSec = cal.get(Calendar.SECOND);
-        return getTimeTill(nowHour, nowMin, nowSec, time);
+        //int nowSec = cal.get(Calendar.SECOND);
+        return getTimeTill(nowHour, nowMin, time);
     }
 
-    private static int getTimeTill(int nowHour, int nowMin, int nowSec, String endTime) {
+    private int getTimeTill(int nowHour, int nowMin, String endTime) {
         Matcher m = Pattern.compile("(\\d{2}):(\\d{2})").matcher(endTime);
         if (! m.matches()) {
             throw new IllegalArgumentException("Invalid time format: " + endTime);
@@ -436,7 +460,11 @@ public class Main {
         if (endHour >= 24 || endMin >= 60) {
             throw new IllegalArgumentException("Invalid time format: " + endTime);
         }
-        return (endHour * 60 + endMin - (nowHour * 60 + nowMin)) * 60;
+        int timeTill = (endHour * 60 + endMin - (nowHour * 60 + nowMin)) * 60;
+        if (timeTill < 0) {
+            timeTill += 24 * 60 * 60;
+        }
+        return timeTill;
     }
 
     public boolean useCommandOnRestart() {
