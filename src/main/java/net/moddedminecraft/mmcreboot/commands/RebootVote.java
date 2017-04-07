@@ -132,14 +132,6 @@ public class RebootVote implements CommandExecutor {
                 plugin.displayVotes();
             }
 
-
-            /*plugin.broadcastMessage("&3---------- Restart ----------");
-            plugin.broadcastMessage("&a" + src.getName() + " &bhas voted that the server should be restarted");
-            plugin.broadcastMessage("&6Type &a/reboot vote yes &6if you agree");
-            plugin.broadcastMessage("&6Type &c/reboot vote no &6if you do not agree");
-            plugin.broadcastMessage("&6If there are more yes votes than no, The server will be restarted! (minimum of " + Config.timerMinplayers + ")");
-            plugin.broadcastMessage("&bYou have &a90 &bseconds to vote!");
-            plugin.broadcastMessage("&3----------------------------");*/
             PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
             List<Text> contents = new ArrayList<>();
             List<String> broadcast = Messages.getRestartVoteBroadcast();
