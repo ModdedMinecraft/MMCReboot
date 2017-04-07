@@ -1,6 +1,7 @@
 package net.moddedminecraft.mmcreboot.commands;
 
 import net.moddedminecraft.mmcreboot.Config.Config;
+import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Config.Permissions;
 import net.moddedminecraft.mmcreboot.Main;
 import org.spongepowered.api.Sponge;
@@ -10,10 +11,11 @@ import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.service.pagination.PaginationService;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.channel.MessageChannel;
 
-import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class RebootVote implements CommandExecutor {
 
@@ -49,7 +51,7 @@ public class RebootVote implements CommandExecutor {
 
                 case "yes":
                     if (plugin.hasVoted.contains(src)) {
-                        throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
+                        throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyVoted()));
                     }
                     if (plugin.voteStarted) {
                         plugin.yesVotes += 1;
@@ -57,15 +59,15 @@ public class RebootVote implements CommandExecutor {
                             plugin.hasVoted.add((Player) src);
                         }
                         plugin.displayVotes();
-                        plugin.sendMessage(src, "You Voted Yes!");
+                        plugin.sendMessage(src, Messages.getVotedYes());
                         return CommandResult.success();
                     } else {
-                        throw new CommandException(plugin.fromLegacy("&4There is no vote running at the moment"));
+                        throw new CommandException(plugin.fromLegacy(Messages.getErrorNoVoteRunning()));
                     }
 
                 case "no":
                     if (plugin.hasVoted.contains(src)) {
-                        throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
+                        throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyVoted()));
                     }
                     if (plugin.voteStarted) {
                         plugin.noVotes += 1;
@@ -73,11 +75,11 @@ public class RebootVote implements CommandExecutor {
                             plugin.hasVoted.add((Player) src);
                         }
                         plugin.displayVotes();
-                        plugin.sendMessage(src, "You Voted No!");
+                        plugin.sendMessage(src, Messages.getVotedNo());
                         return CommandResult.success();
 
                     } else {
-                        throw new CommandException(plugin.fromLegacy("&4There is no vote running at the moment"));
+                        throw new CommandException(plugin.fromLegacy(Messages.getErrorNoVoteRunning()));
                     }
 
                 default:
@@ -91,28 +93,28 @@ public class RebootVote implements CommandExecutor {
             int minutes = (int) ((timeLeft - hours * 3600) / 60);
 
             if (!src.hasPermission(Permissions.BYPASS) && !src.hasPermission(Permissions.COMMAND_VOTE)) {
-                throw new CommandException(plugin.fromLegacy("&4You don't have permission to do this!"));
+                throw new CommandException(plugin.fromLegacy(Messages.getErrorNoPermission()));
             }
             if (!src.hasPermission(Permissions.BYPASS) && !Config.voteEnabled) {
-                throw new CommandException(plugin.fromLegacy("&4Voting to restart is disabled"));
+                throw new CommandException(plugin.fromLegacy(Messages.getErrorVoteToRestartDisabled()));
             }
             if (plugin.hasVoted.contains(src)) {
-                throw new CommandException(plugin.fromLegacy("&4You have already voted!"));
+                throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyVoted()));
             }
             if (plugin.voteStarted) {
-                throw new CommandException(plugin.fromLegacy("&4A vote is already running"));
+                throw new CommandException(plugin.fromLegacy(Messages.getErrorVoteAlreadyRunning()));
             }
             if (!src.hasPermission(Permissions.BYPASS) && plugin.justStarted) {
-                throw new CommandException(plugin.fromLegacy("&4The server needs to be online for " + Config.timerStartvote + " minutes before starting a vote!"));
+                throw new CommandException(plugin.fromLegacy(Messages.getErrorNotOnlineLongEnough()));
             }
             if (!src.hasPermission(Permissions.BYPASS) && Sponge.getServer().getOnlinePlayers().size() < Config.timerMinplayers) {
-                throw new CommandException(plugin.fromLegacy("&4There must be a minimum of " + Config.timerMinplayers + " players online to start a vote"));
+                throw new CommandException(plugin.fromLegacy(Messages.getErrorMinPlayers()));
             }
             if (plugin.isRestarting && minutes <= 10) {
-                throw new CommandException(plugin.fromLegacy("&4The server is already restarting!"));
+                throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyRestarting()));
             }
             if (plugin.cdTimer == 1) {
-                throw new CommandException(plugin.fromLegacy("&4You need to wait " + Config.timerRevote + " minutes before starting another vote!"));
+                throw new CommandException(plugin.fromLegacy(Messages.getErrorWaitTime()));
             }
 
 
@@ -131,13 +133,30 @@ public class RebootVote implements CommandExecutor {
             }
 
 
-            plugin.broadcastMessage("&3---------- Restart ----------");
+            /*plugin.broadcastMessage("&3---------- Restart ----------");
             plugin.broadcastMessage("&a" + src.getName() + " &bhas voted that the server should be restarted");
             plugin.broadcastMessage("&6Type &a/reboot vote yes &6if you agree");
             plugin.broadcastMessage("&6Type &c/reboot vote no &6if you do not agree");
             plugin.broadcastMessage("&6If there are more yes votes than no, The server will be restarted! (minimum of " + Config.timerMinplayers + ")");
             plugin.broadcastMessage("&bYou have &a90 &bseconds to vote!");
-            plugin.broadcastMessage("&3----------------------------");
+            plugin.broadcastMessage("&3----------------------------");*/
+            PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
+            List<Text> contents = new ArrayList<>();
+            List<String> broadcast = Messages.getRestartVoteBroadcast();
+            if (broadcast != null) {
+                for (String line : broadcast) {
+                    String checkLine = line.replace("%playername$", src.getName()).replace("%config.timerminplayers%", String.valueOf(Config.timerMinplayers));
+                    contents.add(plugin.fromLegacy(checkLine));
+                }
+            }
+
+            if (!contents.isEmpty()) {
+                paginationService.builder()
+                        .title(plugin.fromLegacy("Restart"))
+                        .contents(contents)
+                        .padding(Text.of("="))
+                        .sendTo(MessageChannel.TO_ALL);
+            }
 
             Timer voteTimer = new Timer();
             voteTimer.schedule(new TimerTask() {
@@ -155,11 +174,11 @@ public class RebootVote implements CommandExecutor {
                         Config.restartInterval = (Config.timerVotepassed + 1) / 3600.0;
                         plugin.logger.info("[MMCReboot] scheduling restart tasks...");
                         plugin.usingReason = 1;
-                        plugin.reason = "Players have voted to restart the server.";
+                        plugin.reason = Messages.getRestartPassed();
                         plugin.scheduleTasks();
                     } else {
                         if (plugin.voteCancel == 0) {
-                            plugin.broadcastMessage("&f[&6Restart&f] &3The server will not be restarted. Not enough people have voted.");
+                            plugin.broadcastMessage("&f[&6Restart&f] " + Messages.getRestartVoteNotEnoughVoted());
                         }
                         plugin.yesVotes = 0;
                         plugin.cdTimer = 1;

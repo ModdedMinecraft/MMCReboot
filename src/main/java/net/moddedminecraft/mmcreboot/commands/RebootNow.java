@@ -1,5 +1,6 @@
 package net.moddedminecraft.mmcreboot.commands;
 
+import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Main;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -22,13 +23,13 @@ public class RebootNow implements CommandExecutor {
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         plugin.rebootConfirm = 1;
-        plugin.sendMessage(src, "&cPlease type: &6/Reboot Confirm &cif you are sure you want to do this.");
+        plugin.sendMessage(src, Messages.getRestartConfirmMessage());
 
         nowTimer = new Timer();
         nowTimer.schedule(new TimerTask() {
             public void run() {
                 plugin.rebootConfirm = 0;
-                plugin.sendMessage(src, "&cYou took too long to confirm the reboot.");
+                plugin.sendMessage(src, Messages.getErrorTookTooLong());
             }
         }, (60 * 1000));
         return CommandResult.success();

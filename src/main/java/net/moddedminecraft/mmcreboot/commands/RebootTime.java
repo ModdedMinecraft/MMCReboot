@@ -1,6 +1,7 @@
 package net.moddedminecraft.mmcreboot.commands;
 
 import net.moddedminecraft.mmcreboot.Config.Config;
+import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Main;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -17,8 +18,8 @@ public class RebootTime implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        if(!Config.restartEnabled) {
-            throw new CommandException(plugin.fromLegacy("&cThere is no auto-restart scheduled!"));
+        if(!plugin.tasksScheduled) {
+            throw new CommandException(plugin.fromLegacy(Messages.getErrorNoTaskScheduled()));
         }
 
         double timeLeft = (Config.restartInterval * 3600) - ((double)(System.currentTimeMillis() - plugin.startTimestamp) / 1000);
@@ -26,7 +27,10 @@ public class RebootTime implements CommandExecutor {
         int minutes = (int)((timeLeft - hours * 3600) / 60);
         int seconds = (int)timeLeft % 60;
 
-        plugin.sendMessage(src, "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
+        plugin.sendMessage(src, Messages.getRestartMessageWithoutReason()
+                .replace("%hours%", String.valueOf(hours))
+                .replace("%minutes%", String.valueOf(minutes))
+                .replace("%seconds%", String.valueOf(seconds)));
         return CommandResult.success();
     }
 }

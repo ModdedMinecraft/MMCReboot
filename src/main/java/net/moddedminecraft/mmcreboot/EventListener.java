@@ -1,14 +1,19 @@
 package net.moddedminecraft.mmcreboot;
 
 import net.moddedminecraft.mmcreboot.Config.Config;
+import net.moddedminecraft.mmcreboot.Config.Messages;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.service.pagination.PaginationService;
+import org.spongepowered.api.text.Text;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class EventListener {
@@ -22,12 +27,26 @@ public class EventListener {
     public void onPlayerLogin(ClientConnectionEvent.Join event, @Root Player player) throws IOException, ObjectMappingException {
         if (plugin.voteStarted) {
             Sponge.getScheduler().createTaskBuilder().execute(new Runnable() {
+
                 public void run() {
+                    PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
+                    List<Text> contents = new ArrayList<>();
                     plugin.displayVotes();
-                    plugin.sendMessage(player, "&f[&6Restart-Vote&f] &3There is a vote to restart the server.");
+                    for (String line : Messages.getRestartVoteBroadcastOnLogin()) {
+                        contents.add(plugin.fromLegacy(line.replace("%config.timerminplayers%", String.valueOf(Config.timerMinplayers))));
+                    }
+
+                    if (!contents.isEmpty()) {
+                        paginationService.builder()
+                                .title(plugin.fromLegacy("Restart"))
+                                .contents(contents)
+                                .padding(Text.of("="))
+                                .sendTo(player);
+                    }
+                    /*plugin.sendMessage(player, "&f[&6Restart-Vote&f] &3There is a vote to restart the server.");
                     plugin.sendMessage(player, "&6Type &a/reboot vote yes &6if you agree");
                     plugin.sendMessage(player, "&6Type &c/reboot vote no &6if you do not agree");
-                    plugin.sendMessage(player, "&6If there are more yes votes than no, The server will be restarted! (minimum of " + Config.timerMinplayers + ")");
+                    plugin.sendMessage(player, "&6If there are more yes votes than no, The server will be restarted! (minimum of " + Config.timerMinplayers + ")");*/
                 }
             }).delay(10, TimeUnit.SECONDS).name("mmcreboot-s-sendVoteOnLogin").submit(this);
         }

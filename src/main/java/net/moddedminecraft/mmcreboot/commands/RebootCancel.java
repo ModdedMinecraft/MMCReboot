@@ -1,5 +1,6 @@
 package net.moddedminecraft.mmcreboot.commands;
 
+import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Main;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -20,7 +21,7 @@ public class RebootCancel implements CommandExecutor {
         plugin.cancelTasks();
         plugin.removeScoreboard();
         plugin.isRestarting = false;
-        plugin.sendMessage(src, "&3Restarts have been canceled.");
+        plugin.sendMessage(src, Messages.getRestartCancel());
         return CommandResult.success();
     }
 }

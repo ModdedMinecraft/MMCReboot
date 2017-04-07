@@ -1,5 +1,6 @@
 package net.moddedminecraft.mmcreboot.commands;
 
+import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Main;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -17,11 +18,11 @@ public class RebootConfirm implements CommandExecutor {
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
         if (plugin.rebootConfirm == 1) {
-            plugin.sendMessage(src, "&cOk, you asked for it!");
+            plugin.sendMessage(src, Messages.getRestartConfirm());
             plugin.stopServer();
             return CommandResult.success();
         } else {
-            throw new CommandException(plugin.fromLegacy("&cThere is nothing to confirm."));
+            throw new CommandException(plugin.fromLegacy(Messages.getErrorNothingToConfirm()));
         }
     }
 }

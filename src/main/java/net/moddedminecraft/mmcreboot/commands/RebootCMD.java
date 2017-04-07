@@ -1,12 +1,14 @@
 package net.moddedminecraft.mmcreboot.commands;
 
 import net.moddedminecraft.mmcreboot.Config.Config;
+import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Main;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.text.Text;
 
 import java.util.Optional;
 
@@ -26,21 +28,22 @@ public class RebootCMD implements CommandExecutor {
         Optional<String> reasonOP = args.getOne("reason");
         double restartTime;
 
-        if (reasonOP.isPresent()) {
-            plugin.reason = reasonOP.get();
-        } else {
-            plugin.reason = null;
-        }
+        plugin.reason = reasonOP.orElse(null);
 
-        if(timeValue.equals("h")) {
-            restartTime = timeAmount * 3600;
-        } else if(timeValue.equals("m")) {
-            restartTime = (timeAmount * 60) + 1;
-        } else if(timeValue.equals("s")) {
-            restartTime = timeAmount;
-        } else {
-            plugin.sendMessage(src, "&bUse 'h' for time in hours, 'm' for minutes and 's' for seconds");
-            throw new CommandException(plugin.fromLegacy("&cInvalid time scale!"));
+        switch (timeValue) {
+            case "h":
+                restartTime = timeAmount * 3600;
+                break;
+            case "m":
+                restartTime = (timeAmount * 60) + 1;
+                break;
+            case "s":
+                restartTime = timeAmount;
+                break;
+            default:
+                plugin.sendMessage(src, Messages.getRestartFormatMessage());
+                src.sendMessage(Text.of());
+                throw new CommandException(plugin.fromLegacy(Messages.getErrorInvalidTimescale()));
         }
 
         plugin.logger.info("[MMCReboot] " + src.getName() + " is setting a new restart time...");
@@ -66,10 +69,16 @@ public class RebootCMD implements CommandExecutor {
         int seconds = (int)timeLeft % 60;
 
         if (reasonOP.isPresent()) {
-            plugin.sendMessage(src, "&3The server will now be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s &3with the reason:");
+            plugin.sendMessage(src, Messages.getRestartMessageWithReason()
+                    .replace("%hours%", String.valueOf(hours))
+                    .replace("%minutes%", String.valueOf(minutes))
+                    .replace("%seconds%", String.valueOf(seconds)));
             plugin.sendMessage(src, "&6" + plugin.reason);
         } else {
-            plugin.sendMessage(src, "&3The server will now be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
+            plugin.sendMessage(src, Messages.getRestartMessageWithoutReason()
+                    .replace("%hours%", String.valueOf(hours))
+                    .replace("%minutes%", String.valueOf(minutes))
+                    .replace("%seconds%", String.valueOf(seconds)));
         }
 
         return CommandResult.success();

@@ -3,6 +3,7 @@ package net.moddedminecraft.mmcreboot;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.inject.Inject;
 import net.moddedminecraft.mmcreboot.Config.Config;
+import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Config.Permissions;
 import net.moddedminecraft.mmcreboot.Tasks.ShutdownTask;
 import net.moddedminecraft.mmcreboot.commands.*;
@@ -55,7 +56,7 @@ public class Main {
 
     @Inject
     @ConfigDir(sharedRoot = false)
-    private File configDir;
+    public Path configDir;
 
     @Inject
     @DefaultConfig(sharedRoot = false)
@@ -93,7 +94,7 @@ public class Main {
     private Vector3d soundLoc;
 
     private Config config;
-
+    private Messages messages;
 
     private CommandManager cmdManager = Sponge.getCommandManager();
 
@@ -103,17 +104,18 @@ public class Main {
     public void Init(GameInitializationEvent event) throws IOException, ObjectMappingException {
         Sponge.getEventManager().registerListeners(this, new EventListener(this));
         this.config = new Config(this);
+        this.messages = new Messages(this);
         loadCommands();
     }
 
     @Listener
     public void onServerStart(GameStartedServerEvent event) throws IOException {
-        int seconds = getTimeUntill("04:30");
-        logger.info("seconds till 04:30 - " + seconds);
         soundLoc = new Vector3d(0, 64, 0);
         if(Config.restartType.equalsIgnoreCase("fixed")) {
+            logger.info("[MMCReboot] Using fixed restart scheduler");
             scheduleTasks();
         } else if(Config.restartType.equalsIgnoreCase("realtime")) {
+            logger.info("[MMCReboot] Using realtime restart scheduler");
             scheduleRealTimeRestart();
         } else {
             logger.info("[MMCReboot] No automatic restarts scheduled!");
@@ -151,6 +153,7 @@ public class Main {
         isRestarting = false;
 
         this.config = new Config(this);
+        this.messages = new Messages(this);
 
         if(Config.restartType.equalsIgnoreCase("fixed")) {
             scheduleTasks();
@@ -266,13 +269,13 @@ public class Main {
         if (isRestarting) {
             displayRestart();
         }
-        if (voteStarted && isRestarting && voteCancel == 0) {
+        if (voteStarted && voteCancel == 0) {
             displayVotes();
         }
     }
 
     public void reduceVote() {
-        if (voteStarted && isRestarting && voteCancel == 0) {
+        if (voteStarted && voteCancel == 0) {
             if (voteSeconds > 0) {
                 voteSeconds -= 1;
             }
@@ -458,7 +461,7 @@ public class Main {
         String s = formatter.format(seconds);
 
         board = Scoreboard.builder().build();
-        Objective obj = Objective.builder().name("restart").criterion(Criteria.DUMMY).displayName(Text.of("Restart Timer")).build();
+        Objective obj = Objective.builder().name("restart").criterion(Criteria.DUMMY).displayName(Text.of(Messages.getSidebarRestartTimerTitle())).build();
 
         board.addObjective(obj);
         board.updateDisplaySlot(obj, DisplaySlots.SIDEBAR);
@@ -474,14 +477,14 @@ public class Main {
     {
         board = Scoreboard.builder().build();
 
-        Objective obj = Objective.builder().name("vote").criterion(Criteria.DUMMY).displayName(Text.of("Restart Vote")).build();
+        Objective obj = Objective.builder().name("vote").criterion(Criteria.DUMMY).displayName(Text.of(Messages.getSidebarTitle())).build();
 
         board.addObjective(obj);
         board.updateDisplaySlot(obj, DisplaySlots.SIDEBAR);
 
-        obj.getOrCreateScore(Text.builder("Yes:").color(TextColors.GREEN).build()).setScore(yesVotes);
-        obj.getOrCreateScore(Text.builder("No:").color(TextColors.AQUA).build()).setScore(noVotes);
-        obj.getOrCreateScore(Text.builder("Time Left:").color(TextColors.RED).build()).setScore(getTimeLeftInSeconds());
+        obj.getOrCreateScore(Text.builder(Messages.getSidebarYes() + ":").color(TextColors.GREEN).build()).setScore(yesVotes);
+        obj.getOrCreateScore(Text.builder(Messages.getSidebarNo() + ":").color(TextColors.AQUA).build()).setScore(noVotes);
+        obj.getOrCreateScore(Text.builder(Messages.getSidebarTimeleft() + ":").color(TextColors.RED).build()).setScore(getTimeLeftInSeconds());
 
 
         for (Player player : Sponge.getServer().getOnlinePlayers()) {
