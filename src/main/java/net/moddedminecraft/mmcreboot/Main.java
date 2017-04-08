@@ -278,7 +278,11 @@ public class Main {
 
     public void action() {
         if (isRestarting) {
-            displayRestart();
+            if (Config.restartInterval > 0) {
+                displayRestart(Config.restartInterval * 3600);
+            } else if (nextRealTimeRestart > 0){
+                displayRestart(nextRealTimeRestart);
+            }
         }
         if (voteStarted && voteCancel == 0) {
             displayVotes();
@@ -481,9 +485,9 @@ public class Main {
         return voteSeconds;
     }
 
-    public void displayRestart()
+    public void displayRestart(double rInterval)
     {
-        double timeLeft = (Config.restartInterval * 3600) - ((double)(System.currentTimeMillis() - startTimestamp) / 1000);
+        double timeLeft = rInterval - ((double)(System.currentTimeMillis() - startTimestamp) / 1000);
         int hours = (int)(timeLeft / 3600);
         int minutes = (int)((timeLeft - hours * 3600) / 60);
         int seconds = (int)timeLeft % 60;

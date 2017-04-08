@@ -60,7 +60,7 @@ public class RebootCMD implements CommandExecutor {
         plugin.isRestarting = true;
 
         if (restartTime <= 300) {
-            plugin.displayRestart();
+            plugin.displayRestart(Config.restartInterval * 3600);
         }
 
         double timeLeft = (Config.restartInterval * 3600) - ((double)(System.currentTimeMillis() - plugin.startTimestamp) / 1000);
