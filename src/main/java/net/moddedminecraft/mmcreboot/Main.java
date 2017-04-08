@@ -297,8 +297,10 @@ public class Main {
     }
 
     public void checkRealTimeRestart() {
-        if (nextRealTimeRestart == 0 && !isRestarting) {
-            scheduleRealTimeRestart();
+        if(Config.restartType.equalsIgnoreCase("realtime")) {
+            if (nextRealTimeRestart == 0 && !isRestarting) {
+                scheduleRealTimeRestart();
+            }
         }
     }
 
@@ -404,6 +406,7 @@ public class Main {
         isRestarting = false;
         TPSRestarting = false;
         usingReason = 0;
+        nextRealTimeRestart = 0;
     }
 
 
