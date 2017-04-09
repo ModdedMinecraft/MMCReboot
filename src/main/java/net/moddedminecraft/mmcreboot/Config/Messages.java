@@ -94,7 +94,7 @@ public class Messages {
     //restart notification
     private static String restartNotificationMinutes = "&bThe server will be restarting in &f%minutes%:%seconds% &bminutes";
     private static String restartNotificationMinute = "&bThe server will be restarting in &f%minutes% &bminute";
-    private static String restartNotificationSeconds = "&bThe server will be restarting in &f%seconds &bseconds";
+    private static String restartNotificationSeconds = "&bThe server will be restarting in &f%seconds% &bseconds";
 
     //help
     private static String helpHeader = "&3[] = required  () = optional";
