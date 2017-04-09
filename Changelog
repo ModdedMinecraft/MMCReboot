@@ -1,6 +1,7 @@
 v2.0.1
 Changes
  - Localisation is now located in the localisation folder - Allows for easy default translation addition
+ - Custom bstats piechart for restart type usage
 
 Fixes
  - Added missed messages to localisation configuration
