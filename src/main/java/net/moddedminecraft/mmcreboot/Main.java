@@ -359,11 +359,14 @@ public class Main {
                         NumberFormat formatter = new DecimalFormat("00");
                         String s = formatter.format(seconds);
                         if (minutes > 1) {
-                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + ":" + s + " &bminutes");
+                            String message = Messages.getRestartNotificationMinutes().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
+                            broadcastMessage("&f[&6Restart&f] " + message);
                         } else if (minutes == 1) {
-                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + minutes + " &bminute");
+                            String message = Messages.getRestartNotificationMinute().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
+                            broadcastMessage("&f[&6Restart&f] " + message);
                         } else if (minutes < 1) {
-                            broadcastMessage("&f[&6Restart&f] &bThe server will be restarting in &f" + s + " &bseconds");
+                            String message = Messages.getRestartNotificationSeconds().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
+                            broadcastMessage("&f[&6Restart&f] " + message);
                         } else {
                             logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
                         }
