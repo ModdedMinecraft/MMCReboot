@@ -140,6 +140,13 @@ public class Main {
 
         Sponge.getScheduler().createTaskBuilder().execute(this::CheckTPSForRestart).delay(Config.tpsCheckDelay, TimeUnit.MINUTES).interval(30, TimeUnit.SECONDS).name("mmcreboot-s-checkTPSForRestart").submit(this);
 
+        metrics.addCustomChart(new Metrics.SimplePie("restart_type") {
+            @Override
+            public String getValue() {
+                return Config.restartType;
+            }
+        });
+
         logger.info("MMCReboot Loaded");
     }
 
