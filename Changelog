@@ -1,3 +1,10 @@
+v2.0.1
+Changes
+ - Localisation is now located in the localisation folder - Allows for easy default translation addition
+
+Fixes
+ - Added missed messages to localisation configuration
+
 v2.0
 BREAKING CONFIG CHANGE(S)!! - Recommended config reset
 
