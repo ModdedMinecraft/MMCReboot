@@ -73,6 +73,8 @@ public class Config {
     public static int titleStayTime;
     public static String titleMessage;
 
+    public static String language;
+
     //public static boolean playSoundOnFirstWarningOnly;
     public static String playSoundString = "block.note.pling";
     public static double playSoundFirstTime;
@@ -117,6 +119,8 @@ public class Config {
                                                                                 + "If the TPS is above the minimum, the restart is canceled").getBoolean();
         tpsRestartCancelMsg = check(config.getNode("tps", "restart-cancel-message"), "&bThe server will not restart. The TPS is now above the minimum", "The broadcast message sent to everyone if the restart was canceled").getString();
         tpsCheckDelay = check(config.getNode("tps", "check-delay"), 15, "How long after the server starts until the TPS check initiates. (In minutes)").getInt();
+
+        language = check(config.getNode("language"), "EN", "Localization to be used, All available translations are in the 'localization' folder").getString();
 
         loader.save(config);
     }

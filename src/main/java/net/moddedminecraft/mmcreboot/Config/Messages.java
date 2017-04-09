@@ -6,6 +6,7 @@ import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import org.spongepowered.api.Sponge;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,9 +25,14 @@ public class Messages {
 
     public Messages(Main main) throws IOException, ObjectMappingException {
         plugin = main;
-        defaultMessage = plugin.configDir.resolve("messages.conf");
+        String language = Config.language;
+        defaultMessage = plugin.configDir.resolve("localization/messages_" + language + ".conf");
+        if (Files.notExists(defaultMessage)) {
+            plugin.logger.warn("Localization was not found");
+        }
         messageLoader = HoconConfigurationLoader.builder().setPath(defaultMessage).build();
         messages = messageLoader.load();
+        checkLangAssetFiles();
         messageCheck();
     }
 
@@ -85,6 +91,11 @@ public class Messages {
     private static List<String> restartVoteBroadcast;
     private static List<String> restartVoteBroadcastOnLogin;
 
+    //restart notification
+    private static String restartNotificationMinutes = "&bThe server will be restarting in &f%minutes%:%seconds% &bminutes";
+    private static String restartNotificationMinute = "&bThe server will be restarting in &f%minutes% &bminute";
+    private static String restartNotificationSeconds = "&bThe server will be restarting in &f%seconds &bseconds";
+
     //help
     private static String helpHeader = "&3[] = required  () = optional";
     private static String helpHelp = "&3/reboot &bhelp - &7shows this help";
@@ -102,9 +113,6 @@ public class Messages {
 
 
     private void messageCheck() throws IOException, ObjectMappingException {
-        if (!Files.exists(defaultMessage)) {
-            Files.createFile(defaultMessage);
-        }
 
         //sidebar
         sidebarTitle = check(messages.getNode("sidebar", "vote", "title"), sidebarTitle).getString();
@@ -144,6 +152,11 @@ public class Messages {
         restartVoteBroadcast = checkList(messages.getNode("vote-notification", "after-command"), restartVoteBroadcastDefault).getList(TypeToken.of(String.class));
         restartVoteBroadcastOnLogin = checkList(messages.getNode("vote-notification", "on-login"), restartVoteBroadcastOnLoginDefault).getList(TypeToken.of(String.class));
 
+        //restart notification
+        restartNotificationMinutes = check(messages.getNode("restart-notification", "more-than-1-minute-remaining"), restartNotificationMinutes).getString();
+        restartNotificationMinute = check(messages.getNode("restart-notification", "only-1-minute-remaining"), restartNotificationMinute).getString();
+        restartNotificationSeconds = check(messages.getNode("restart-notification", "less-than-1-minute-remaining"), restartNotificationSeconds).getString();
+
         //help
         helpHeader = check(messages.getNode("help", "header"), helpHeader).getString();
         helpHelp = check(messages.getNode("help", "help"), helpHelp).getString();
@@ -156,6 +169,23 @@ public class Messages {
         helpVoteNo = check(messages.getNode("help", "vote-no"), helpVoteNo).getString();
 
         messageLoader.save(messages);
+    }
+
+    private void checkLangAssetFiles() throws IOException {
+        if (!Files.isDirectory(plugin.configDir.resolve("localization"))) {
+            Files.createDirectory(plugin.configDir.resolve("localization"));
+        }
+        String[] assets = {
+                "messages_EN.conf",
+                "messages_RU.conf"
+        };
+        for (String asset : assets) {
+            if (!Files.exists(plugin.configDir.resolve("localization/" +asset))) {
+                if (Sponge.getAssetManager().getAsset(plugin, asset).isPresent()) {
+                    Sponge.getAssetManager().getAsset(plugin, asset).get().copyToFile(plugin.configDir.resolve("localization/" +asset));
+                }
+            }
+        }
     }
 
     private CommentedConfigurationNode check(CommentedConfigurationNode node, Object defaultValue) {
@@ -330,6 +360,18 @@ public class Messages {
 
     public static List<String> getRestartVoteBroadcastOnLogin() {
         return restartVoteBroadcastOnLogin;
+    }
+
+    public static String getRestartNotificationMinute() {
+        return restartNotificationMinute;
+    }
+
+    public static String getRestartNotificationMinutes() {
+        return restartNotificationMinutes;
+    }
+
+    public static String getRestartNotificationSeconds() {
+        return restartNotificationSeconds;
     }
 }
 
