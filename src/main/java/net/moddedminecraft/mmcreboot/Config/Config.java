@@ -87,7 +87,7 @@ public class Config {
 
         restartType = check(config.getNode("autorestart", "enabled"), "Fixed", "Values: Fixed, Realtime or None. The value choses here represents what timer will be used.").getString();
         restartInterval = check(config.getNode("autorestart", "fixed" ,"interval"), 6, "How long in hours should the auto restart timer be set for?").getInt();
-        realTimeInterval = checkList(config.getNode("autorestart", "realtime" ,"intervals"), RealTimeList, "How long in hours should the auto restart timer be set for?").getList(TypeToken.of(String.class));
+        realTimeInterval = checkList(config.getNode("autorestart", "realtime" ,"intervals"), RealTimeList, "Set times for server restarts (24h time eg: 18:30)").getList(TypeToken.of(String.class));
 
         timerBroadcast = checkList(config.getNode("timer", "broadcast"), timerBroadcastList, "warning times before reboot in seconds").getList(TypeToken.of(Integer.class));
         timerRevote =  check(config.getNode("timer", "re-vote"), 10, "Time before another vote to restart can begin. (In minutes)  ").getInt();
