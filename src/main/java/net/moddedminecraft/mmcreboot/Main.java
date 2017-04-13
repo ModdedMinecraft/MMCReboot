@@ -169,6 +169,7 @@ public class Main {
             scheduleTasks();
         } else if(Config.restartType.equalsIgnoreCase("realtime")) {
             scheduleRealTimeRestart();
+            Config.restartInterval = 0;
         } else {
             logger.info("[MMCReboot] No automatic restarts scheduled!");
         }
@@ -316,6 +317,7 @@ public class Main {
     }
 
     public void scheduleRealTimeRestart() {
+        cancelTasks();
         nextRealTimeRestart = getNextRealTimeFromConfig();
         double rInterval = nextRealTimeRestart;
         if (Config.timerBroadcast != null) {
