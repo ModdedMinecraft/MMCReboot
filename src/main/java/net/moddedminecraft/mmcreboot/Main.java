@@ -118,6 +118,7 @@ public class Main {
         } else if(Config.restartType.equalsIgnoreCase("realtime")) {
             logger.info("[MMCReboot] Using realtime restart scheduler");
             scheduleRealTimeRestart();
+            Config.restartInterval = 0;
         } else {
             logger.info("[MMCReboot] No automatic restarts scheduled!");
         }
@@ -423,6 +424,7 @@ public class Main {
         TPSRestarting = false;
         usingReason = 0;
         nextRealTimeRestart = 0;
+        Config.restartInterval = 0;
     }
 
 
