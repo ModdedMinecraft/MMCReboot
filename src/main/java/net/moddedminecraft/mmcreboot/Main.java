@@ -424,7 +424,6 @@ public class Main {
         TPSRestarting = false;
         usingReason = 0;
         nextRealTimeRestart = 0;
-        Config.restartInterval = 0;
     }
 
 
