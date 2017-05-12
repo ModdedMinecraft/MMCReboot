@@ -22,6 +22,7 @@ public class RebootTime implements CommandExecutor {
             throw new CommandException(plugin.fromLegacy(Messages.getErrorNoTaskScheduled()));
         }
 
+        if(Config.restartType.equalsIgnoreCase("fixed") || (Config.restartInterval > 0 && plugin.isRestarting && (plugin.nextRealTimeRestart > Config.restartInterval || plugin.nextRealTimeRestart == 0))) {
             double timeLeft = (Config.restartInterval * 3600) - ((double)(System.currentTimeMillis() - plugin.startTimestamp) / 1000);
             int hours = (int)(timeLeft / 3600);
             int minutes = (int)((timeLeft - hours * 3600) / 60);
