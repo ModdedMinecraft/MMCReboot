@@ -42,6 +42,11 @@ public class Config {
             "18:00"
     };
 
+    private String[] restartCmdList = {
+            "/changeme",
+            "/me too"
+    };
+
     public static String restartType;
     public static double restartInterval;
 
@@ -57,7 +62,7 @@ public class Config {
     public static int timerVotepassed;
 
     public static boolean restartUseCommand;
-    public static String restartCommand;
+    public static List<String> restartCommands;
 
     public static boolean tpsEnabled;
     public static int tpsMinimum;
@@ -108,7 +113,7 @@ public class Config {
         voteEnabled = check(config.getNode("voting", "enabled"), true, "Enable or Disable the ability for players to vote for a server restart").getBoolean();
 
         restartUseCommand = check(config.getNode("restart", "use-command"), false, "If enabled, This will run the configured command instead of restarting the server.").getBoolean();
-        restartCommand = check(config.getNode("restart", "command"), "/changeme", "The command to run if 'use-command' has been enabled").getString();
+        restartCommands = checkList(config.getNode("restart", "command"), restartCmdList, "The command(s) to run if 'use-command' has been enabled").getList(TypeToken.of(String.class));
 
         tpsEnabled = check(config.getNode("tps", "use"), false, "If enabled, the server will initiate a restart timer if the TPS is below the minimum set.").getBoolean();
         tpsMinimum = check(config.getNode("tps", "minimum"), 10, "The minimum TPS to initiate a restart timer").getInt();

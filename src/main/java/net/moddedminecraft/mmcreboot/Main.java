@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.0.4", authors = {"Leelawd93"})
+@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.1.0", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
@@ -487,11 +487,13 @@ public class Main {
         return timeTill;
     }
 
-    public boolean useCommandOnRestart() {
+    public void useCommandOnRestart() {
         logger.info("[MMCReboot] Running Command");
         isRestarting = false;
-        Sponge.getCommandManager().process(Sponge.getServer().getConsole(), Config.restartCommand.replace("/", ""));
-        return true;
+        List<String> cmds = Config.restartCommands;
+        for (String cmd : cmds) {
+            Sponge.getCommandManager().process(Sponge.getServer().getConsole(), cmd.replace("/", ""));
+        }
     }
 
     public int getTimeLeftInSeconds() {
