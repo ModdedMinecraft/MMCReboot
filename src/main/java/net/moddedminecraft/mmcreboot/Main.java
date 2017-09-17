@@ -262,26 +262,33 @@ public class Main {
 
     public void CheckTPSForRestart() {
         if (getTPS() < Config.tpsMinimum && Config.tpsEnabled && !getTPSRestarting()) {
-            setTPSRestarting(true);
-            Timer warnTimer = new Timer();
-            warningTimers.add(warnTimer);
-            warnTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    if (getTPS() < Config.tpsMinimum) {
-                        isRestarting = true;
-                        Config.restartInterval = (Config.tpsTimer + 1) / 3600.0;
-                        logger.info("[MMCReboot] scheduling restart tasks...");
-                        if (Config.tpsUseReason) {
-                            usingReason = 1;
-                            reason = Config.tpsMessage;
+            double timeLeft = Config.restartInterval * 3600 - ((double) (System.currentTimeMillis() - startTimestamp) / 1000);
+            int hours = (int) (timeLeft / 3600);
+            int minutes = (int) ((timeLeft - hours * 3600) / 60);
+            if (hours == 0 && minutes > 20 || hours > 0) {
+                setTPSRestarting(true);
+                Timer warnTimer = new Timer();
+                warningTimers.add(warnTimer);
+                warnTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (getTPS() < Config.tpsMinimum) {
+                            isRestarting = true;
+                            Config.restartInterval = (Config.tpsTimer + 1) / 3600.0;
+                            logger.info("[MMCReboot] scheduling restart tasks...");
+                            if (Config.tpsUseReason) {
+                                usingReason = 1;
+                                reason = Config.tpsMessage;
+                            } else {
+                                usingReason = 0;
+                            }
+                            scheduleTasks();
                         } else {
-                            usingReason = 0;
+                            setTPSRestarting(false);
                         }
-                        scheduleTasks();
                     }
-                }
-            }, 15000);
+                }, 15000);
+            }
         }
     }
 
