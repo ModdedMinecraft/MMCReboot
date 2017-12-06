@@ -2,6 +2,7 @@ package net.moddedminecraft.mmcreboot.Tasks;
 
 import net.moddedminecraft.mmcreboot.Config.Config;
 import net.moddedminecraft.mmcreboot.Main;
+import org.spongepowered.api.scheduler.Task;
 
 import java.util.TimerTask;
 
@@ -30,7 +31,9 @@ public class ShutdownTask extends TimerTask {
                     plugin.removeScoreboard();
                     plugin.useCommandOnRestart();
                 } else {
-                    plugin.stopServer();
+                    Task.builder()
+                            .execute(t -> plugin.stopServer())
+                            .submit(plugin);
                 }
             }
         } else {
@@ -39,7 +42,9 @@ public class ShutdownTask extends TimerTask {
                 plugin.removeScoreboard();
                 plugin.useCommandOnRestart();
             } else {
-                plugin.stopServer();
+                Task.builder()
+                        .execute(t -> plugin.stopServer())
+                        .submit(plugin);
             }
         }
     }
