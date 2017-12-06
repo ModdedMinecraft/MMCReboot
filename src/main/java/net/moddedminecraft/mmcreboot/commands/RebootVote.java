@@ -147,7 +147,7 @@ public class RebootVote implements CommandExecutor {
                         .title(plugin.fromLegacy("Restart"))
                         .contents(contents)
                         .padding(Text.of("="))
-                        .sendTo(MessageChannel.TO_ALL);
+                        .sendTo(MessageChannel.TO_ALL.getMembers());
             }
 
             Timer voteTimer = new Timer();
