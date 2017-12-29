@@ -27,9 +27,12 @@ public class ShutdownTask extends TimerTask {
                 }
             } else if (plugin.getTPS() < Config.tpsMinimum) {
                 if (Config.restartUseCommand) {
-                    plugin.cancelTasks();
-                    plugin.removeScoreboard();
-                    plugin.useCommandOnRestart();
+                    Task.builder()
+                            .execute(() -> {
+                                plugin.cancelTasks();
+                                plugin.removeScoreboard();
+                                plugin.useCommandOnRestart();
+                            }).submit(plugin);
                 } else {
                     Task.builder()
                             .execute(t -> plugin.stopServer())
@@ -38,9 +41,12 @@ public class ShutdownTask extends TimerTask {
             }
         } else {
             if (Config.restartUseCommand) {
-                plugin.cancelTasks();
-                plugin.removeScoreboard();
-                plugin.useCommandOnRestart();
+                Task.builder()
+                        .execute(() -> {
+                            plugin.cancelTasks();
+                            plugin.removeScoreboard();
+                            plugin.useCommandOnRestart();
+                        }).submit(plugin);
             } else {
                 Task.builder()
                         .execute(t -> plugin.stopServer())
