@@ -452,7 +452,11 @@ public class Main {
         }
         try {
             Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "save-all");
-            Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "stop");
+            if (Config.kickmessage.isEmpty()) {
+                Sponge.getServer().shutdown();
+            } else {
+                Sponge.getServer().shutdown(fromLegacy(Config.kickmessage));
+            }
         } catch (Exception e) {
             logger.info("[MMCReboot] Something went wrong while saving & stopping!");
             return false;

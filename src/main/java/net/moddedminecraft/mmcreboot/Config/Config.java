@@ -80,6 +80,8 @@ public class Config {
 
     public static String language;
 
+    public static String kickmessage;
+
     //public static boolean playSoundOnFirstWarningOnly;
     public static String playSoundString = "block.note.pling";
     public static double playSoundFirstTime;
@@ -126,6 +128,8 @@ public class Config {
         tpsCheckDelay = check(config.getNode("tps", "check-delay"), 15, "How long after the server starts until the TPS check initiates. (In minutes)").getInt();
 
         language = check(config.getNode("language"), "EN", "Localization to be used, All available translations are in the 'localization' folder").getString();
+
+        kickmessage = check(config.getNode("kick-message"), "The server is restarting.", "The message that is sent to all players as the server shuts down.").getString();
 
         loader.save(config);
     }
