@@ -31,7 +31,9 @@ public class EventListener {
                 public void run() {
                     PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
                     List<Text> contents = new ArrayList<>();
-                    plugin.displayVotes();
+                    if  (Config.timerUseVoteScoreboard) {
+                        plugin.displayVotes();
+                    }
                     for (String line : Messages.getRestartVoteBroadcastOnLogin()) {
                         String checkLine = line.replace("%config.timerminplayers%", String.valueOf(Config.timerMinplayers));
                         contents.add(plugin.fromLegacy(checkLine));

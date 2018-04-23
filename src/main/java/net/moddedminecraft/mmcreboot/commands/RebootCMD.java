@@ -59,7 +59,7 @@ public class RebootCMD implements CommandExecutor {
         plugin.scheduleTasks();
         plugin.isRestarting = true;
 
-        if (restartTime <= 300) {
+        if (restartTime <= 300 && Config.timerUseScoreboard) {
             plugin.displayRestart(Config.restartInterval * 3600);
         }
 
