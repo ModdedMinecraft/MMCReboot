@@ -110,7 +110,7 @@ public class RebootVote implements CommandExecutor {
             if (!src.hasPermission(Permissions.BYPASS) && Sponge.getServer().getOnlinePlayers().size() < Config.timerMinplayers) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorMinPlayers()));
             }
-            if (plugin.isRestarting && minutes <= 10) {
+            if (plugin.isRestarting && (hours == 0 && minutes <= 10)) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyRestarting()));
             }
             if (plugin.cdTimer == 1) {
@@ -157,6 +157,7 @@ public class RebootVote implements CommandExecutor {
                     float percentage = plugin.yesVotes/Online *100;
 
                     if ((plugin.yesVotes > plugin.noVotes) && (plugin.voteCancel == 0) && (plugin.yesVotes >= Config.timerMinplayers) && (percentage >= Config.timerVotepercent)) {
+
                         plugin.removeScoreboard();
                         plugin.yesVotes = 0;
                         plugin.cdTimer = 1;
