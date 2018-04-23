@@ -318,7 +318,7 @@ public class Main {
 
     public void checkRealTimeRestart() {
         if(Config.restartType.equalsIgnoreCase("realtime")) {
-            if (nextRealTimeRestart == 0 && !isRestarting) {
+            if (nextRealTimeRestart == 0 && !isRestarting && voteCancel == 0) {
                 scheduleRealTimeRestart();
             }
         }
