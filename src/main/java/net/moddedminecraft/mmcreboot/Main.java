@@ -293,7 +293,7 @@ public class Main {
     }
 
     public void action() {
-        if (isRestarting) {
+        if (isRestarting && Config.timerUseScoreboard) {
             if (Config.restartInterval > 0) {
                 displayRestart(Config.restartInterval * 3600);
             } else if (nextRealTimeRestart > 0){

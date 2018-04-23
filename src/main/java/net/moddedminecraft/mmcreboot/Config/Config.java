@@ -53,6 +53,7 @@ public class Config {
     //public static boolean realTimeEnabled;
     public static List<String> realTimeInterval;
 
+    public static boolean timerUseScoreboard;
     public static List<Integer> timerBroadcast;
     public static int timerRevote;
     public static int timerStartvote;
@@ -96,6 +97,7 @@ public class Config {
         restartInterval = check(config.getNode("autorestart", "fixed" ,"interval"), 6, "How long in hours should the auto restart timer be set for?").getInt();
         realTimeInterval = checkList(config.getNode("autorestart", "realtime" ,"intervals"), RealTimeList, "Set times for server restarts (24h time eg: 18:30)").getList(TypeToken.of(String.class));
 
+        timerUseScoreboard = check(config.getNode("timer", "scoreboard", "use"), true, "Whether or not the scoreboard should be shown during the last 5 minute countdown to a restart").getBoolean();
         timerBroadcast = checkList(config.getNode("timer", "broadcast"), timerBroadcastList, "warning times before reboot in seconds").getList(TypeToken.of(Integer.class));
         timerRevote =  check(config.getNode("timer", "re-vote"), 10, "Time before another vote to restart can begin. (In minutes)  ").getInt();
         timerStartvote = check(config.getNode("timer", "start-vote"), 60, "How long should it be before players are allowed to start a vote after the server has restarted (In minutes) ").getInt();
