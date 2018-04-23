@@ -300,7 +300,7 @@ public class Main {
                 displayRestart(nextRealTimeRestart);
             }
         }
-        if (voteStarted && voteCancel == 0) {
+        if (voteStarted && voteCancel == 0 && Config.timerUseVoteScoreboard) {
             displayVotes();
         }
     }
