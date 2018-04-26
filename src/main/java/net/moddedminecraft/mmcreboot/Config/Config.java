@@ -65,6 +65,7 @@ public class Config {
 
     public static boolean restartUseCommand;
     public static List<String> restartCommands;
+    public static String defaultRestartReason;
 
     public static boolean tpsEnabled;
     public static int tpsMinimum;
@@ -120,6 +121,7 @@ public class Config {
 
         restartUseCommand = check(config.getNode("restart", "use-command"), false, "If enabled, This will run the configured command instead of restarting the server.").getBoolean();
         restartCommands = checkList(config.getNode("restart", "command"), restartCmdList, "The command(s) to run if 'use-command' has been enabled").getList(TypeToken.of(String.class));
+        defaultRestartReason = check(config.getNode("restart", "reason"), "", "The default reason shown for a restart (automated and manual), Leave blank for no reason.").getString();
 
         tpsEnabled = check(config.getNode("tps", "use"), false, "If enabled, the server will initiate a restart timer if the TPS is below the minimum set.").getBoolean();
         tpsMinimum = check(config.getNode("tps", "minimum"), 10, "The minimum TPS to initiate a restart timer").getInt();

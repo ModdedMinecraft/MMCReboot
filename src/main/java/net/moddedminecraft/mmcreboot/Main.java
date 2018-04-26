@@ -114,9 +114,15 @@ public class Main {
         if(Config.restartType.equalsIgnoreCase("fixed")) {
             logger.info("[MMCReboot] Using fixed restart scheduler");
             scheduleTasks();
+            if (!Config.defaultRestartReason.isEmpty()) {
+                reason = Config.defaultRestartReason;
+            }
         } else if(Config.restartType.equalsIgnoreCase("realtime")) {
             logger.info("[MMCReboot] Using realtime restart scheduler");
             scheduleRealTimeRestart();
+            if (!Config.defaultRestartReason.isEmpty()) {
+                reason = Config.defaultRestartReason;
+            }
             Config.restartInterval = 0;
         } else {
             logger.info("[MMCReboot] No automatic restarts scheduled!");
@@ -167,8 +173,14 @@ public class Main {
 
         if(Config.restartType.equalsIgnoreCase("fixed")) {
             scheduleTasks();
+            if (!Config.defaultRestartReason.isEmpty()) {
+                reason = Config.defaultRestartReason;
+            }
         } else if(Config.restartType.equalsIgnoreCase("realtime")) {
             scheduleRealTimeRestart();
+            if (!Config.defaultRestartReason.isEmpty()) {
+                reason = Config.defaultRestartReason;
+            }
             Config.restartInterval = 0;
         } else {
             logger.info("[MMCReboot] No automatic restarts scheduled!");
