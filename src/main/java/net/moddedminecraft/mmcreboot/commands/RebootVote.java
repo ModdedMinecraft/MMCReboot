@@ -166,7 +166,6 @@ public class RebootVote implements CommandExecutor {
                         plugin.isRestarting = true;
                         Config.restartInterval = (Config.timerVotepassed + 1) / 3600.0;
                         plugin.logger.info("[MMCReboot] scheduling restart tasks...");
-                        plugin.usingReason = 1;
                         plugin.reason = Messages.getRestartPassed();
                         plugin.scheduleTasks();
                     } else {
@@ -177,7 +176,6 @@ public class RebootVote implements CommandExecutor {
                         plugin.cdTimer = 1;
                         plugin.voteCancel = 0;
                         plugin.voteStarted = false;
-                        plugin.usingReason = 0;
                         plugin.removeScoreboard();
                         plugin.hasVoted.clear();
                         Timer voteTimer = new Timer();

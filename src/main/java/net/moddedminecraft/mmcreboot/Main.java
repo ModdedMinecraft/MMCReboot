@@ -66,7 +66,6 @@ public class Main {
     @DefaultConfig(sharedRoot = false)
     public File defaultConfFile;
 
-    public int usingReason = 0;
     public int voteCancel = 0;
     public int cdTimer = 0;
     public boolean voteStarted = false;
@@ -277,10 +276,7 @@ public class Main {
                             Config.restartInterval = (Config.tpsTimer + 1) / 3600.0;
                             logger.info("[MMCReboot] scheduling restart tasks...");
                             if (Config.tpsUseReason) {
-                                usingReason = 1;
                                 reason = Config.tpsMessage;
-                            } else {
-                                usingReason = 0;
                             }
                             scheduleTasks();
                         } else {
@@ -429,7 +425,6 @@ public class Main {
         tasksScheduled = false;
         isRestarting = false;
         TPSRestarting = false;
-        usingReason = 0;
         nextRealTimeRestart = 0;
     }
 
