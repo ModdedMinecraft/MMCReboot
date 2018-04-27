@@ -412,7 +412,9 @@ public class Main {
                         }
                         for (Player p : Sponge.getServer().getOnlinePlayers()) {
                             if (Config.titleEnabled) {
-                                p.sendTitle(Title.builder().subtitle(fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", "" + s)))
+                                p.sendTitle(Title.builder()
+                                        .subtitle(fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", "" + s)))
+                                        .actionBar(fromLegacy(reason))
                                         .fadeIn(20).fadeOut(20).stay(Config.titleStayTime * 20).build());
                             }
                         }
