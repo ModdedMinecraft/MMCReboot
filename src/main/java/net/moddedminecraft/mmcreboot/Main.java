@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.2.0", authors = {"Leelawd93"})
+@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.2.1", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
