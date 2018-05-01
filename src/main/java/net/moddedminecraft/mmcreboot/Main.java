@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.2.1", authors = {"Leelawd93"})
+@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.2.2", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
@@ -412,10 +412,16 @@ public class Main {
                         }
                         for (Player p : Sponge.getServer().getOnlinePlayers()) {
                             if (Config.titleEnabled) {
-                                p.sendTitle(Title.builder()
-                                        .subtitle(fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", "" + s)))
-                                        .actionBar(fromLegacy(reason))
-                                        .fadeIn(20).fadeOut(20).stay(Config.titleStayTime * 20).build());
+                                if (reason != null) {
+                                    p.sendTitle(Title.builder()
+                                            .title(fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", "" + s)))
+                                            .subtitle(fromLegacy(reason))
+                                            .fadeIn(10).fadeOut(10).stay(Config.titleStayTime * 20).build());
+                                } else {
+                                    p.sendTitle(Title.builder()
+                                            .subtitle(fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", "" + s)))
+                                            .fadeIn(10).fadeOut(10).stay(Config.titleStayTime * 20).build());
+                                }
                             }
                         }
                         if (reason != null) {
