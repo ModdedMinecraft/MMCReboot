@@ -159,6 +159,7 @@ public class RebootVote implements CommandExecutor {
                     if ((plugin.yesVotes > plugin.noVotes) && (plugin.voteCancel == 0) && (plugin.yesVotes >= Config.timerMinplayers) && (percentage >= Config.timerVotepercent)) {
 
                         plugin.removeScoreboard();
+                        plugin.removeBossBar();
                         plugin.yesVotes = 0;
                         plugin.cdTimer = 1;
                         plugin.voteStarted = false;
@@ -177,6 +178,7 @@ public class RebootVote implements CommandExecutor {
                         plugin.voteCancel = 0;
                         plugin.voteStarted = false;
                         plugin.removeScoreboard();
+                        plugin.removeBossBar();
                         plugin.hasVoted.clear();
                         Timer voteTimer = new Timer();
                         voteTimer.schedule(new TimerTask() {

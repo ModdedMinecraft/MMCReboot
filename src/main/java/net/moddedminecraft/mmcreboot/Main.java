@@ -10,6 +10,9 @@ import net.moddedminecraft.mmcreboot.commands.*;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.boss.BossBarColors;
+import org.spongepowered.api.boss.BossBarOverlays;
+import org.spongepowered.api.boss.ServerBossBar;
 import org.spongepowered.api.command.CommandManager;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.command.args.GenericArguments;
@@ -100,6 +103,8 @@ public class Main {
 
     private Scoreboard board;
 
+    private ServerBossBar bar;
+
     @Listener
     public void Init(GameInitializationEvent event) throws IOException, ObjectMappingException {
         Sponge.getEventManager().registerListeners(this, new EventListener(this));
@@ -166,6 +171,7 @@ public class Main {
     public void onPluginReload(GameReloadEvent event) throws IOException, ObjectMappingException {
         cancelTasks();
         removeScoreboard();
+        removeBossBar();
         isRestarting = false;
 
         this.config = new Config(this);
@@ -526,8 +532,7 @@ public class Main {
         return voteSeconds;
     }
 
-    public void displayRestart(double rInterval)
-    {
+    public void displayRestart(double rInterval) {
         double timeLeft = rInterval - ((double)(System.currentTimeMillis() - startTimestamp) / 1000);
         int hours = (int)(timeLeft / 3600);
         int minutes = (int)((timeLeft - hours * 3600) / 60);
@@ -544,13 +549,29 @@ public class Main {
 
         obj.getOrCreateScore(Text.builder(Integer.toString(minutes) +":" + s).color(TextColors.GREEN).build()).setScore(0);
 
+        int mSec = (minutes * 60);
+        double val = ((mSec + seconds) * 100 / 300);
+        float percent = (float)val / 100.0f;
+
         Sponge.getServer().getOnlinePlayers().stream().filter(player -> minutes < 5 && hours == 0).forEach(player -> {
             player.setScoreboard(board);
+            if (Config.bossbarEnabled) {
+                if (bar == null) {
+                    bar = ServerBossBar.builder()
+                            .name(Text.of(Config.bossbarTitle.replace("{minutes}", Integer.toString(minutes)).replace("{seconds}", s)))
+                            .color(BossBarColors.GREEN)
+                            .overlay(BossBarOverlays.PROGRESS)
+                            .percent(percent)
+                            .build();
+                } else {
+                    bar.setPercent(percent);
+                }
+                bar.addPlayer(player);
+            }
         });
     }
 
-    public void displayVotes()
-    {
+    public void displayVotes() {
         board = Scoreboard.builder().build();
 
         Objective obj = Objective.builder().name("vote").criterion(Criteria.DUMMY).displayName(Text.of(Messages.getSidebarTitle())).build();
@@ -568,10 +589,15 @@ public class Main {
         }
     }
 
-    public  void removeScoreboard()
-    {
+    public  void removeScoreboard() {
         for (Player player : Sponge.getServer().getOnlinePlayers()) {
             player.getScoreboard().clearSlot(DisplaySlots.SIDEBAR);
+        }
+    }
+
+    public  void removeBossBar() {
+        if (bar != null) {
+            bar.removePlayers(bar.getPlayers());
         }
     }
 

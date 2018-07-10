@@ -53,6 +53,9 @@ public class Config {
     //public static boolean realTimeEnabled;
     public static List<String> realTimeInterval;
 
+    public static boolean bossbarEnabled;
+    public static String bossbarTitle;
+
     public static boolean timerUseVoteScoreboard;
     public static boolean timerUseScoreboard;
     public static List<Integer> timerBroadcast;
@@ -116,6 +119,9 @@ public class Config {
         titleEnabled = check(config.getNode("timer", "notifications", "title", "enabled"), true, "Should a title message pop up in the middle of the screen").getBoolean();
         titleStayTime = check(config.getNode("timer", "notifications", "title", "staytime"), 2, "How long should the title message show up for before disappearing? (in seconds)").getInt();
         titleMessage = check(config.getNode("timer", "notifications", "title", "message"), "The server will be restarting in {minutes}:{seconds}", "The title message to be displayed ({hours},{minutes},{seconds} will be replaced").getString();
+
+        bossbarEnabled = check(config.getNode("bossbar", "enabled"), false, "If true, A bossbar will display with a countdown until restart.").getBoolean();
+        bossbarTitle = check(config.getNode("bossbar", "title"), "Restart", "Title displayed above the boss bar, Can use {minutes} and {seconds} to display time").getString();
 
         voteEnabled = check(config.getNode("voting", "enabled"), true, "Enable or Disable the ability for players to vote for a server restart").getBoolean();
 

@@ -20,6 +20,7 @@ public class RebootCancel implements CommandExecutor {
         plugin.voteCancel = 1;
         plugin.cancelTasks();
         plugin.removeScoreboard();
+        plugin.removeBossBar();
         plugin.isRestarting = false;
         plugin.sendMessage(src, Messages.getRestartCancel());
         return CommandResult.success();
