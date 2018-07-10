@@ -88,7 +88,12 @@ public class RebootVote implements CommandExecutor {
 
             }
         } else {
-            double timeLeft = (Config.restartInterval * 3600) - ((double) (System.currentTimeMillis() - plugin.startTimestamp) / 1000);
+            double timeLeft = 0;
+            if (Config.restartInterval > 0) {
+                timeLeft = (Config.restartInterval * 3600) - ((double) (System.currentTimeMillis() - plugin.startTimestamp) / 1000);
+            } else if (plugin.nextRealTimeRestart > 0){
+                timeLeft = (plugin.nextRealTimeRestart) - ((double) (System.currentTimeMillis() - plugin.startTimestamp) / 1000);
+            }
             int hours = (int) (timeLeft / 3600);
             int minutes = (int) ((timeLeft - hours * 3600) / 60);
 
@@ -110,7 +115,7 @@ public class RebootVote implements CommandExecutor {
             if (!src.hasPermission(Permissions.BYPASS) && Sponge.getServer().getOnlinePlayers().size() < Config.timerMinplayers) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorMinPlayers()));
             }
-            if (plugin.isRestarting && (hours == 0 && minutes <= 10)) {
+            if (plugin.isRestarting && timeLeft != 0 && (hours == 0 && minutes <= 10)) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyRestarting()));
             }
             if (plugin.cdTimer == 1) {
