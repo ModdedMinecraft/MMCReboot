@@ -8,6 +8,7 @@ import net.moddedminecraft.mmcreboot.Config.Permissions;
 import net.moddedminecraft.mmcreboot.Tasks.ShutdownTask;
 import net.moddedminecraft.mmcreboot.commands.*;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import org.bstats.sponge.Metrics2;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.boss.BossBarColors;
@@ -55,7 +56,7 @@ public class Main {
     public Logger logger;
 
     @Inject
-    private Metrics metrics;
+    private Metrics2 metrics;
 
     @Inject
     @ConfigDir(sharedRoot = false)
@@ -151,12 +152,12 @@ public class Main {
 
         Sponge.getScheduler().createTaskBuilder().execute(this::CheckTPSForRestart).delay(Config.tpsCheckDelay, TimeUnit.MINUTES).interval(30, TimeUnit.SECONDS).name("mmcreboot-s-checkTPSForRestart").submit(this);
 
-        metrics.addCustomChart(new Metrics.SimplePie("restart_type") {
+       /* metrics.addCustomChart(new Metrics.SimplePie("restart_type") {
             @Override
             public String getValue() {
                 return Config.restartType;
             }
-        });
+        });*/
 
         logger.info("MMCReboot Loaded");
     }
@@ -469,6 +470,7 @@ public class Main {
             }
         } catch (Exception e) {
             logger.info("[MMCReboot] Something went wrong while touching restart.txt!");
+            logger.info("Exception: " + e);
             return false;
         }
         try {
@@ -480,6 +482,7 @@ public class Main {
             }
         } catch (Exception e) {
             logger.info("[MMCReboot] Something went wrong while saving & stopping!");
+            logger.info("Exception: " + e);
             return false;
         }
         return true;
