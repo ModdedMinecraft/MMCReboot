@@ -22,13 +22,13 @@ public class RebootNow implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        plugin.rebootConfirm = 1;
+        plugin.rebootConfirm = true;
         plugin.sendMessage(src, Messages.getRestartConfirmMessage());
 
         nowTimer = new Timer();
         nowTimer.schedule(new TimerTask() {
             public void run() {
-                plugin.rebootConfirm = 0;
+                plugin.rebootConfirm = false;
                 plugin.sendMessage(src, Messages.getErrorTookTooLong());
             }
         }, (60 * 1000));

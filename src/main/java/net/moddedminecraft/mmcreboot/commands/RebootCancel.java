@@ -20,11 +20,11 @@ public class RebootCancel implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        plugin.voteCancel = 1;
+        plugin.voteCancel = true;
         Timer voteCancelimer = new Timer();
         voteCancelimer.schedule(new TimerTask() {
             public void run() {
-                plugin.voteCancel = 0;
+                plugin.voteCancel = false;
             }
         }, (long) (15 * 60000.0));
         plugin.cancelTasks();

@@ -70,8 +70,8 @@ public class Main {
     @DefaultConfig(sharedRoot = false)
     public File defaultConfFile;
 
-    public int voteCancel = 0;
-    public int cdTimer = 0;
+    public boolean voteCancel = false;
+    public boolean cdTimer = false;
     public boolean voteStarted = false;
     public int yesVotes = 0;
     public int noVotes = 0;
@@ -85,7 +85,7 @@ public class Main {
     public boolean justStarted = true;
     public boolean isRestarting = false;
     public boolean TPSRestarting = false;
-    public int rebootConfirm = 0;
+    public boolean rebootConfirm = false;
     public boolean tasksScheduled = false;
     public double nextRealTimeRestart;
 
@@ -314,13 +314,13 @@ public class Main {
                 displayRestart(nextRealTimeRestart);
             }
         }
-        if (voteStarted && voteCancel == 0 && Config.timerUseVoteScoreboard) {
+        if (voteStarted && voteCancel && Config.timerUseVoteScoreboard) {
             displayVotes();
         }
     }
 
     public void reduceVote() {
-        if (voteStarted && voteCancel == 0) {
+        if (voteStarted && !voteCancel) {
             if (voteSeconds > 0) {
                 voteSeconds -= 1;
             }
@@ -332,7 +332,7 @@ public class Main {
 
     public void checkRealTimeRestart() {
         if(Config.restartType.equalsIgnoreCase("realtime")) {
-            if (nextRealTimeRestart == 0 && !isRestarting && voteCancel == 0) {
+            if (nextRealTimeRestart == 0 && !isRestarting && !voteCancel) {
                 scheduleRealTimeRestart();
             }
         }

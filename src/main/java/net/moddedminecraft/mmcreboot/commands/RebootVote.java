@@ -118,7 +118,7 @@ public class RebootVote implements CommandExecutor {
             if (plugin.isRestarting && timeLeft != 0 && (hours == 0 && minutes <= 10)) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyRestarting()));
             }
-            if (plugin.cdTimer == 1) {
+            if (plugin.cdTimer) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorWaitTime()));
             }
 
@@ -126,7 +126,7 @@ public class RebootVote implements CommandExecutor {
             if (src instanceof Player) {
                 Player player = (Player) src;
                 plugin.voteStarted = true;
-                plugin.voteCancel = 0;
+                plugin.voteCancel = false;
                 plugin.hasVoted.add(player);
                 plugin.yesVotes += 1;
                 plugin.noVotes = 0;
@@ -161,12 +161,12 @@ public class RebootVote implements CommandExecutor {
                     int Online = Sponge.getServer().getOnlinePlayers().size();
                     float percentage = plugin.yesVotes/Online *100;
 
-                    if ((plugin.yesVotes > plugin.noVotes) && (plugin.voteCancel == 0) && (plugin.yesVotes >= Config.timerMinplayers) && (percentage >= Config.timerVotepercent)) {
+                    if ((plugin.yesVotes > plugin.noVotes) && (!plugin.voteCancel) && (plugin.yesVotes >= Config.timerMinplayers) && (percentage >= Config.timerVotepercent)) {
 
                         plugin.removeScoreboard();
                         plugin.removeBossBar();
                         plugin.yesVotes = 0;
-                        plugin.cdTimer = 1;
+                        plugin.cdTimer = true;
                         plugin.voteStarted = false;
                         plugin.hasVoted.clear();
                         plugin.isRestarting = true;
@@ -175,12 +175,12 @@ public class RebootVote implements CommandExecutor {
                         plugin.reason = Messages.getRestartPassed();
                         plugin.scheduleTasks();
                     } else {
-                        if (plugin.voteCancel == 0) {
+                        if (!plugin.voteCancel) {
                             plugin.broadcastMessage("&f[&6Restart&f] " + Messages.getRestartVoteNotEnoughVoted());
                         }
                         plugin.yesVotes = 0;
-                        plugin.cdTimer = 1;
-                        plugin.voteCancel = 0;
+                        plugin.cdTimer = true;
+                        plugin.voteCancel = false;
                         plugin.voteStarted = false;
                         plugin.removeScoreboard();
                         plugin.removeBossBar();
@@ -188,7 +188,7 @@ public class RebootVote implements CommandExecutor {
                         Timer voteTimer = new Timer();
                         voteTimer.schedule(new TimerTask() {
                             public void run() {
-                                plugin.cdTimer = 0;
+                                plugin.cdTimer = false;
                             }
                         }, (long) (Config.timerRevote * 60000.0));
                     }
