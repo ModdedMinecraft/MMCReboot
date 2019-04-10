@@ -159,16 +159,13 @@ public class RebootVote implements CommandExecutor {
             voteTimer.schedule(new TimerTask() {
                 public void run() {
                     int Online = Sponge.getServer().getOnlinePlayers().size();
-                    float percentage = plugin.yesVotes/Online *100;
+                    int percentage = plugin.yesVotes/Online *100;
 
-                    if ((plugin.yesVotes > plugin.noVotes) && (!plugin.voteCancel) && (plugin.yesVotes >= Config.timerMinplayers) && (percentage >= Config.timerVotepercent)) {
+                    boolean yesAboveNo = plugin.yesVotes > plugin.noVotes;
+                    boolean yesAboveMin = plugin.yesVotes >= Config.timerMinplayers;
+                    boolean requiredPercent = percentage >= Config.timerVotepercent;
 
-                        plugin.removeScoreboard();
-                        plugin.removeBossBar();
-                        plugin.yesVotes = 0;
-                        plugin.cdTimer = true;
-                        plugin.voteStarted = false;
-                        plugin.hasVoted.clear();
+                    if (yesAboveNo && yesAboveMin && !plugin.voteCancel && requiredPercent) {
                         plugin.isRestarting = true;
                         Config.restartInterval = (Config.timerVotepassed + 1) / 3600.0;
                         plugin.logger.info("[MMCReboot] scheduling restart tasks...");
@@ -178,13 +175,7 @@ public class RebootVote implements CommandExecutor {
                         if (!plugin.voteCancel) {
                             plugin.broadcastMessage("&f[&6Restart&f] " + Messages.getRestartVoteNotEnoughVoted());
                         }
-                        plugin.yesVotes = 0;
-                        plugin.cdTimer = true;
                         plugin.voteCancel = false;
-                        plugin.voteStarted = false;
-                        plugin.removeScoreboard();
-                        plugin.removeBossBar();
-                        plugin.hasVoted.clear();
                         Timer voteTimer = new Timer();
                         voteTimer.schedule(new TimerTask() {
                             public void run() {
@@ -192,6 +183,12 @@ public class RebootVote implements CommandExecutor {
                             }
                         }, (long) (Config.timerRevote * 60000.0));
                     }
+                    plugin.removeScoreboard();
+                    plugin.removeBossBar();
+                    plugin.yesVotes = 0;
+                    plugin.cdTimer = true;
+                    plugin.voteStarted = false;
+                    plugin.hasVoted.clear();
                 }
             }, 90000);
             return CommandResult.success();
