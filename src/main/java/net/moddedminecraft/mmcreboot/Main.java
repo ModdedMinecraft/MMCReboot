@@ -144,13 +144,13 @@ public class Main {
         }
 
 
-        Sponge.getScheduler().createTaskBuilder().execute(this::action).delay(250, TimeUnit.MILLISECONDS).interval(500,TimeUnit.MILLISECONDS).name("mmcreboot-s-sendAction").submit(this);
+        Sponge.getScheduler().createTaskBuilder().execute(this::action).delay(250, TimeUnit.MILLISECONDS).interval(500,TimeUnit.MILLISECONDS).async().name("mmcreboot-a-sendAction").submit(this);
 
-        Sponge.getScheduler().createTaskBuilder().execute(this::reduceVote).interval(1, TimeUnit.SECONDS).name("mmcreboot-s-reduceVoteCount").submit(this);
+        Sponge.getScheduler().createTaskBuilder().execute(this::reduceVote).interval(1, TimeUnit.SECONDS).async().name("mmcreboot-a-reduceVoteCount").submit(this);
 
-        Sponge.getScheduler().createTaskBuilder().execute(this::checkRealTimeRestart).delay(1, TimeUnit.HOURS).interval(15 ,TimeUnit.MINUTES).name("mmcreboot-s-checkRealTimeRestart").submit(this);
+        Sponge.getScheduler().createTaskBuilder().execute(this::checkRealTimeRestart).delay(1, TimeUnit.HOURS).interval(15 ,TimeUnit.MINUTES).async().name("mmcreboot-a-checkRealTimeRestart").submit(this);
 
-        Sponge.getScheduler().createTaskBuilder().execute(this::CheckTPSForRestart).delay(Config.tpsCheckDelay, TimeUnit.MINUTES).interval(30, TimeUnit.SECONDS).name("mmcreboot-s-checkTPSForRestart").submit(this);
+        Sponge.getScheduler().createTaskBuilder().execute(this::CheckTPSForRestart).delay(Config.tpsCheckDelay, TimeUnit.MINUTES).interval(30, TimeUnit.SECONDS).async().name("mmcreboot-a-checkTPSForRestart").submit(this);
 
        /* metrics.addCustomChart(new Metrics.SimplePie("restart_type") {
             @Override
@@ -266,8 +266,7 @@ public class Main {
     }
 
     public Double getTPS() {
-        Double TPS = Sponge.getServer().getTicksPerSecond();
-        return TPS;
+        return Sponge.getServer().getTicksPerSecond();
     }
 
     public boolean getTPSRestarting() {
@@ -460,19 +459,6 @@ public class Main {
         logger.info("[MMCReboot] Restarting...");
         isRestarting = false;
         broadcastMessage("&cServer is restarting, we'll be right back!");
-        try {
-            File file = new File(configDir + File.separator + "restart.txt");
-            logger.info("[MMCReboot] Touching restart.txt at: " + file.getAbsolutePath());
-            if (file.exists()) {
-                file.setLastModified(System.currentTimeMillis());
-            } else {
-                file.createNewFile();
-            }
-        } catch (Exception e) {
-            logger.info("[MMCReboot] Something went wrong while touching restart.txt!");
-            logger.info("Exception: " + e);
-            return false;
-        }
         try {
             Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "save-all");
             if (Config.kickmessage.isEmpty()) {
