@@ -17,7 +17,7 @@ public class RebootConfirm implements CommandExecutor {
 
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        if (plugin.rebootConfirm == 1) {
+        if (plugin.rebootConfirm) {
             plugin.sendMessage(src, Messages.getRestartConfirm());
             plugin.stopServer();
             return CommandResult.success();
