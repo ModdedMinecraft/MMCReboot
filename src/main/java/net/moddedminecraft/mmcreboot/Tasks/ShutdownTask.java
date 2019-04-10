@@ -16,6 +16,14 @@ public class ShutdownTask extends TimerTask {
 
     @Override
     public void run() {
+
+        Runnable runnable = () -> {
+            plugin.cancelTasks();
+            plugin.removeScoreboard();
+            plugin.removeBossBar();
+            plugin.useCommandOnRestart();
+        };
+
         if (plugin.getTPSRestarting()) {
             if (plugin.getTPS() >= Config.tpsMinimum && Config.tpsRestartCancel) {
                 plugin.cancelTasks();
@@ -29,12 +37,7 @@ public class ShutdownTask extends TimerTask {
             } else if (plugin.getTPS() < Config.tpsMinimum) {
                 if (Config.restartUseCommand) {
                     Task.builder()
-                            .execute(() -> {
-                                plugin.cancelTasks();
-                                plugin.removeScoreboard();
-                                plugin.removeBossBar();
-                                plugin.useCommandOnRestart();
-                            }).submit(plugin);
+                            .execute(runnable).submit(plugin);
                 } else {
                     Task.builder()
                             .execute(t -> plugin.stopServer())
@@ -44,12 +47,7 @@ public class ShutdownTask extends TimerTask {
         } else {
             if (Config.restartUseCommand) {
                 Task.builder()
-                        .execute(() -> {
-                            plugin.cancelTasks();
-                            plugin.removeScoreboard();
-                            plugin.removeBossBar();
-                            plugin.useCommandOnRestart();
-                        }).submit(plugin);
+                        .execute(runnable).submit(plugin);
             } else {
                 Task.builder()
                         .execute(t -> plugin.stopServer())
