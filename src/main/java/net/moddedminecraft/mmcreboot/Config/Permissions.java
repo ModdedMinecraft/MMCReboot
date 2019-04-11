@@ -10,6 +10,7 @@ public class Permissions {
     public static final String COMMAND_NOW = "mmcreboot.reboot.now";
     public static final String COMMAND_START = "mmcreboot.reboot.start";
     public static final String COMMAND_CANCEL = "mmcreboot.reboot.cancel";
+    public static final String CANCEL_VOTE = "mmcreboot.reboot.cancel.vote";
     public static final String TOGGLE_VOTE = "mmcreboot.reboot.toggle.vote";
     public static final String BYPASS = "mmcreboot.reboot.bypass";
 }
