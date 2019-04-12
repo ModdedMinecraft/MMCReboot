@@ -27,9 +27,6 @@ public class RebootVote implements CommandExecutor {
         plugin = instance;
     }
 
-    //TODO VOTE COOLDOWN
-    //TODO FIX SCOREBOARD
-
     @Override
     public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
 
@@ -204,12 +201,6 @@ public class RebootVote implements CommandExecutor {
                                 plugin.broadcastMessage(prefix + Messages.getRestartVoteNotEnoughVoted());
                             }
                             plugin.voteCancel = false;
-                            Timer voteTimer = new Timer();
-                            voteTimer.schedule(new TimerTask() {
-                                public void run() {
-                                    plugin.cdTimer = false;
-                                }
-                            }, (long) (Config.timerRevote * 60000.0));
                         }
 
                         plugin.removeScoreboard();
@@ -218,6 +209,12 @@ public class RebootVote implements CommandExecutor {
                         plugin.cdTimer = true;
                         plugin.voteStarted = false;
                         plugin.hasVoted.clear();
+                        Timer voteTimer = new Timer();
+                        voteTimer.schedule(new TimerTask() {
+                            public void run() {
+                                plugin.cdTimer = false;
+                            }
+                        }, (long) (Config.timerRevote * 60000.0));
                     }
                 }, 90000);
                 return CommandResult.success();
