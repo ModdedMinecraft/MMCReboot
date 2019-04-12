@@ -108,8 +108,6 @@ public class RebootVote implements CommandExecutor {
                         }
                     default:
                         throw new CommandException(plugin.fromLegacy("&cInvalid Argument!"));
-                        //break;
-
                 }
             } else {
                 double timeLeft = 0;
