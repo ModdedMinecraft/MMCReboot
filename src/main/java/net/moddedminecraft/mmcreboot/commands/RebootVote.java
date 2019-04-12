@@ -14,7 +14,6 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.service.pagination.PaginationList;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageChannel;
-import org.spongepowered.api.text.serializer.TextSerializers;
 
 import java.util.*;
 
@@ -43,7 +42,7 @@ public class RebootVote implements CommandExecutor {
                         if (src.hasPermission(Permissions.TOGGLE_VOTE)) {
                             Config.voteEnabled = true;
                             Config.config.getNode("voting", "enabled").setValue("true");
-                            src.sendMessage(TextSerializers.FORMATTING_CODE.deserialize(commandSuccess.replace("{toggle}", "&aenabled")));
+                            src.sendMessage(plugin.fromLegacy(commandSuccess.replace("{toggle}", "&aenabled")));
                             return CommandResult.success();
                         } else {
                             throw new CommandException(plugin.fromLegacy(noPermission));
@@ -53,7 +52,7 @@ public class RebootVote implements CommandExecutor {
                         if (src.hasPermission(Permissions.TOGGLE_VOTE)) {
                             Config.voteEnabled = false;
                             Config.config.getNode("voting", "enabled").setValue("false");
-                            src.sendMessage(TextSerializers.FORMATTING_CODE.deserialize(commandSuccess.replace("{toggle}", "&cdisabled")));
+                            src.sendMessage(plugin.fromLegacy(commandSuccess.replace("{toggle}", "&cdisabled")));
                             return CommandResult.success();
                         } else {
                             throw new CommandException(plugin.fromLegacy(noPermission));
