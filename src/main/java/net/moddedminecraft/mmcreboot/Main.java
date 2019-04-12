@@ -314,7 +314,7 @@ public class Main {
                 displayRestart(nextRealTimeRestart);
             }
         }
-        if (voteStarted && voteCancel && Config.timerUseVoteScoreboard) {
+        if (voteStarted && !voteCancel && Config.timerUseVoteScoreboard) {
             displayVotes();
         }
     }
