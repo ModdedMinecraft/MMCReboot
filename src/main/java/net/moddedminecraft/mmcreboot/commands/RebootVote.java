@@ -137,7 +137,7 @@ public class RebootVote implements CommandExecutor {
                     }
                 }
 
-                if (plugin.hasVoted.contains(src)) {
+                if (src instanceof Player && plugin.hasVoted.contains(((Player) src).getUniqueId())) {
                     throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyVoted()));
                 }
                 if (plugin.voteStarted) {
