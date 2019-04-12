@@ -192,7 +192,7 @@ public class RebootVote implements CommandExecutor {
                         boolean yesAboveMin = plugin.yesVotes >= Config.timerMinplayers;
                         boolean requiredPercent = percentage >= Config.timerVotepercent;
 
-                        if (yesAboveNo && yesAboveMin && Config.voteEnabled && requiredPercent) {
+                        if (yesAboveNo && yesAboveMin && !plugin.voteCancel && requiredPercent) {
                             plugin.isRestarting = true;
                             Config.restartInterval = (Config.timerVotepassed + 1) / 3600.0;
                             plugin.logger.info("[MMCReboot] scheduling restart tasks...");
@@ -200,7 +200,7 @@ public class RebootVote implements CommandExecutor {
                             plugin.scheduleTasks();
 
                         } else {
-                            if (Config.voteEnabled) {
+                            if (!plugin.voteCancel) {
                                 plugin.broadcastMessage(prefix + Messages.getRestartVoteNotEnoughVoted());
                             }
                             plugin.voteCancel = false;
