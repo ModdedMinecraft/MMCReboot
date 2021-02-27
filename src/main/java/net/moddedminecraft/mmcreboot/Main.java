@@ -8,7 +8,6 @@ import net.moddedminecraft.mmcreboot.Config.Permissions;
 import net.moddedminecraft.mmcreboot.Tasks.ShutdownTask;
 import net.moddedminecraft.mmcreboot.commands.*;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import org.bstats.sponge.Metrics2;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.boss.BossBarColors;
@@ -54,9 +53,6 @@ public class Main {
 
     @Inject
     public Logger logger;
-
-    @Inject
-    private Metrics2 metrics;
 
     @Inject
     @ConfigDir(sharedRoot = false)
@@ -455,23 +451,24 @@ public class Main {
     }
 
 
-    public boolean stopServer() {
+    public void stopServer() {
         logger.info("[MMCReboot] Restarting...");
         isRestarting = false;
         broadcastMessage("&cServer is restarting, we'll be right back!");
         try {
-            Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "save-all");
+            Sponge.getServer().setHasWhitelist(true);
             if (Config.kickmessage.isEmpty()) {
-                Sponge.getServer().shutdown();
+                Sponge.getServer().getOnlinePlayers().forEach(Player::kick);
             } else {
-                Sponge.getServer().shutdown(fromLegacy(Config.kickmessage));
+                Sponge.getServer().getOnlinePlayers().forEach(player -> player.kick(fromLegacy(Config.kickmessage)));
             }
+            Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "save-all");
+            Sponge.getServer().shutdown();
         } catch (Exception e) {
             logger.info("[MMCReboot] Something went wrong while saving & stopping!");
             logger.info("Exception: " + e);
-            return false;
+            broadcastMessage("&cServer has encountered an error while restart.");
         }
-        return true;
     }
 
     public int getNextRealTimeFromConfig() {
