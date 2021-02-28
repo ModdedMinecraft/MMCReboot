@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.3.2", authors = {"Leelawd93"})
+@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.3.4", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
@@ -456,19 +456,22 @@ public class Main {
         isRestarting = false;
         broadcastMessage("&cServer is restarting, we'll be right back!");
         try {
-            Sponge.getServer().setHasWhitelist(true);
             if (Config.kickmessage.isEmpty()) {
                 Sponge.getServer().getOnlinePlayers().forEach(Player::kick);
             } else {
                 Sponge.getServer().getOnlinePlayers().forEach(player -> player.kick(fromLegacy(Config.kickmessage)));
             }
-            Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "save-all");
-            Sponge.getServer().shutdown();
+            Sponge.getScheduler().createTaskBuilder().execute(this::shutdown).delay(1, TimeUnit.SECONDS).name("mmcreboot-s-shutdown").submit(this);
         } catch (Exception e) {
             logger.info("[MMCReboot] Something went wrong while saving & stopping!");
             logger.info("Exception: " + e);
-            broadcastMessage("&cServer has encountered an error while restart.");
+            broadcastMessage("&cServer has encountered an error while restarting.");
         }
+    }
+
+    public void shutdown() {
+        Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "save-all");
+        Sponge.getServer().shutdown();
     }
 
     public int getNextRealTimeFromConfig() {
