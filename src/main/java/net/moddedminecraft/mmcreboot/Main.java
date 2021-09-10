@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.3.4", authors = {"Leelawd93"})
+@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.3.5", authors = {"Leelawd93"})
 public class Main {
 
     @Inject
@@ -385,17 +385,19 @@ public class Main {
 
                         NumberFormat formatter = new DecimalFormat("00");
                         String s = formatter.format(seconds);
-                        if (minutes > 1) {
-                            String message = Messages.getRestartNotificationMinutes().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
-                            broadcastMessage("&f[&6Restart&f] " + message);
-                        } else if (minutes == 1) {
-                            String message = Messages.getRestartNotificationMinute().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
-                            broadcastMessage("&f[&6Restart&f] " + message);
-                        } else if (minutes < 1) {
-                            String message = Messages.getRestartNotificationSeconds().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
-                            broadcastMessage("&f[&6Restart&f] " + message);
-                        } else {
-                            logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
+                        if (Config.timerUseChat) {
+                            if (minutes > 1) {
+                                String message = Messages.getRestartNotificationMinutes().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
+                                broadcastMessage("&f[&6Restart&f] " + message);
+                            } else if (minutes == 1) {
+                                String message = Messages.getRestartNotificationMinute().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
+                                broadcastMessage("&f[&6Restart&f] " + message);
+                            } else if (minutes < 1) {
+                                String message = Messages.getRestartNotificationSeconds().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
+                                broadcastMessage("&f[&6Restart&f] " + message);
+                            } else {
+                                logger.info("[MMCReboot] " + "&bThe server will be restarting in &f" + hours + "h" + minutes + "m" + seconds + "s");
+                            }
                         }
                         if (!playSoundNow && Config.playSoundFirstTime >= aTimerBroadcast) {
                             playSoundNow = true;
