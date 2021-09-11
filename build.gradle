@@ -7,7 +7,7 @@ plugins {
 apply plugin: 'maven'
 
 group = 'net.moddedminecraft'
-version = '2.3.5-API-7'
+version = '2.3.6-API-7'
 
 description = "MMCReboot"
 

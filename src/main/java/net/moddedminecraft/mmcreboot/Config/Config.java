@@ -106,7 +106,7 @@ public class Config {
         timerUseVoteScoreboard = check(config.getNode("timer", "scoreboard", "vote", "use"), true, "Whether or not the scoreboard should be shown during a vote").getBoolean();
         timerUseScoreboard = check(config.getNode("timer", "scoreboard", "countdown", "use"), true, "Whether or not the scoreboard should be shown during the last 5 minute countdown to a restart").getBoolean();
         timerBroadcast = checkList(config.getNode("timer", "broadcast"), timerBroadcastList, "warning times before reboot in seconds").getList(TypeToken.of(Integer.class));
-        timerUseChat = check(config.getNode("timer", "broadcast", "chat", "use"), true, "Whether or not the warning should be broadcast in the chat.").getBoolean();
+        timerUseChat = check(config.getNode("timer", "chat", "use"), true, "Whether or not the warning should be broadcast in the chat.").getBoolean();
         timerRevote =  check(config.getNode("timer", "re-vote"), 10, "Time before another vote to restart can begin. (In minutes)  ").getInt();
         timerStartvote = check(config.getNode("timer", "start-vote"), 60, "How long should it be before players are allowed to start a vote after the server has restarted (In minutes) ").getInt();
         timerVotepercent = check(config.getNode("timer", "vote-percent"), 60, "% of online players to vote yes before a restart is triggered.").getInt();
