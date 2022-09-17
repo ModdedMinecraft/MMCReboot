@@ -77,7 +77,7 @@ public class Messages {
 
     //general
     private static String restartCancel = "&3Restarts have been canceled.";
-    private static String restartPassed = "Players have voted to restart the server.";
+    private static String restartPassed = "&aPlayers have voted to restart the server.";
     private static String restartVoteNotEnoughVoted = "&3The server will not be restarted. Not enough people have voted.";
     private static String votedYes = "You Voted Yes!";
     private static String votedNo = "You Voted No!";
