@@ -71,7 +71,7 @@ public class Main {
     public boolean voteStarted = false;
     public int yesVotes = 0;
     public int noVotes = 0;
-    public ArrayList<Player> hasVoted = new ArrayList<Player>();
+    public ArrayList<UUID> hasVoted = new ArrayList<UUID>();
     public static ArrayList<Integer> realTimeTimes = new ArrayList<Integer>();
 
     public int voteSeconds;
@@ -310,7 +310,7 @@ public class Main {
                 displayRestart(nextRealTimeRestart);
             }
         }
-        if (voteStarted && voteCancel && Config.timerUseVoteScoreboard) {
+        if (voteStarted && !voteCancel && Config.timerUseVoteScoreboard) {
             displayVotes();
         }
     }
