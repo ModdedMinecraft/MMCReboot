@@ -1,15 +1,13 @@
 package net.moddedminecraft.mmcreboot;
 
+import net.kyori.adventure.text.Component;
 import net.moddedminecraft.mmcreboot.Config.Config;
 import net.moddedminecraft.mmcreboot.Config.Messages;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.filter.cause.Root;
-import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 import org.spongepowered.api.service.pagination.PaginationService;
-import org.spongepowered.api.text.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,13 +22,14 @@ public class EventListener {
     }
 
     @Listener
-    public void onPlayerLogin(ClientConnectionEvent.Join event, @Root Player player) throws IOException, ObjectMappingException {
+    public void onPlayerLogin(ServerSideConnectionEvent.Join event) throws IOException {
+        ServerPlayer player = event.player();
         if (plugin.voteStarted) {
-            Sponge.getScheduler().createTaskBuilder().execute(new Runnable() {
+            Sponge.asyncScheduler().executor(plugin.container).schedule(new Runnable() {
 
                 public void run() {
-                    PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
-                    List<Text> contents = new ArrayList<>();
+                    PaginationService paginationService = Sponge.serviceProvider().provide(PaginationService.class).get();
+                    List<Component> contents = new ArrayList<>();
                     if  (Config.timerUseVoteScoreboard) {
                         plugin.displayVotes();
                     }
@@ -43,11 +42,11 @@ public class EventListener {
                         paginationService.builder()
                                 .title(plugin.fromLegacy("Restart"))
                                 .contents(contents)
-                                .padding(Text.of("="))
+                                .padding(Component.text("="))
                                 .sendTo(player);
                     }
                 }
-            }).delay(3, TimeUnit.SECONDS).name("mmcreboot-s-sendVoteOnLogin").submit(plugin);
+            },3 , TimeUnit.SECONDS);
         }
     }
 

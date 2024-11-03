@@ -2,11 +2,10 @@ package net.moddedminecraft.mmcreboot.commands;
 
 import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Main;
-import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandExecutor;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.command.exception.CommandException;
+import org.spongepowered.api.command.parameter.CommandContext;
 
 public class RebootConfirm implements CommandExecutor {
 
@@ -16,9 +15,9 @@ public class RebootConfirm implements CommandExecutor {
     }
 
     @Override
-    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+    public CommandResult execute(CommandContext context) throws CommandException {
         if (plugin.rebootConfirm) {
-            plugin.sendMessage(src, Messages.getRestartConfirm());
+            plugin.sendMessage(context.cause().audience(), Messages.getRestartConfirm());
             plugin.stopServer();
             return CommandResult.success();
         } else {

@@ -1,14 +1,13 @@
 package net.moddedminecraft.mmcreboot.Config;
 
-import com.google.common.reflect.TypeToken;
 import net.moddedminecraft.mmcreboot.Main;
-import ninja.leaping.configurate.commented.CommentedConfigurationNode;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import org.spongepowered.api.Sponge;
+import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
+import org.spongepowered.configurate.loader.ConfigurationLoader;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -23,14 +22,14 @@ public class Messages {
     private static ConfigurationLoader<CommentedConfigurationNode> messageLoader;
     private static CommentedConfigurationNode messages;
 
-    public Messages(Main main) throws IOException, ObjectMappingException {
+    public Messages(Main main) throws IOException {
         plugin = main;
         String language = Config.language;
         defaultMessage = plugin.configDir.resolve("localization/messages_" + language + ".conf");
         if (Files.notExists(defaultMessage)) {
             plugin.logger.warn("Localization was not found");
         }
-        messageLoader = HoconConfigurationLoader.builder().setPath(defaultMessage).build();
+        messageLoader = HoconConfigurationLoader.builder().path(defaultMessage).build();
         messages = messageLoader.load();
         checkLangAssetFiles();
         messageCheck();
@@ -112,61 +111,61 @@ public class Messages {
 
 
 
-    private void messageCheck() throws IOException, ObjectMappingException {
+    private void messageCheck() throws IOException {
 
         //sidebar
-        sidebarTitle = check(messages.getNode("sidebar", "vote", "title"), sidebarTitle).getString();
-        sidebarYes = check(messages.getNode("sidebar", "vote", "yes"), sidebarYes).getString();
-        sidebarNo = check(messages.getNode("sidebar", "vote", "no"), sidebarNo).getString();
-        sidebarTimeleft = check(messages.getNode("sidebar", "restart", "time-left"), sidebarTimeleft).getString();
-        sidebarRestartTimerTitle = check(messages.getNode("sidebar", "restart", "title"), sidebarRestartTimerTitle).getString();
+        sidebarTitle = check(messages.node("sidebar", "vote", "title"), sidebarTitle).getString();
+        sidebarYes = check(messages.node("sidebar", "vote", "yes"), sidebarYes).getString();
+        sidebarNo = check(messages.node("sidebar", "vote", "no"), sidebarNo).getString();
+        sidebarTimeleft = check(messages.node("sidebar", "restart", "time-left"), sidebarTimeleft).getString();
+        sidebarRestartTimerTitle = check(messages.node("sidebar", "restart", "title"), sidebarRestartTimerTitle).getString();
 
         //error
-        errorAlreadyVoted = check(messages.getNode("error", "already-voted"), errorAlreadyVoted).getString();
-        errorNoVoteRunning = check(messages.getNode("error", "no-vote-running"), errorNoVoteRunning).getString();
-        errorVoteToRestartDisabled = check(messages.getNode("error", "vote-restart-disabled"), errorVoteToRestartDisabled).getString();
-        errorVoteAlreadyRunning = check(messages.getNode("error", "vote-already-running"), errorVoteAlreadyRunning).getString();
-        errorNotOnlineLongEnough = check(messages.getNode("error", "not-online-long-enough"), errorNotOnlineLongEnough).getString();
-        errorMinPlayers = check(messages.getNode("error", "min-players"), errorMinPlayers).getString();
-        errorAlreadyRestarting = check(messages.getNode("error", "already-restarting"), errorAlreadyRestarting).getString();
-        errorWaitTime = check(messages.getNode("error", "wait-time"), errorWaitTime).getString();
-        errorNoPermission = check(messages.getNode("error", "no-permission"), errorNoPermission).getString();
-        errorNoTaskScheduled = check(messages.getNode("error", "no-task-scheduled"), errorNoTaskScheduled).getString();
-        errorTookTooLong = check(messages.getNode("error", "took-too-long"), errorTookTooLong).getString();
-        errorInvalidTimescale = check(messages.getNode("error", "invalid-time-scale"), errorInvalidTimescale).getString();
-        errorNothingToConfirm = check(messages.getNode("error", "nothing-to-confirm"), errorNothingToConfirm).getString();
+        errorAlreadyVoted = check(messages.node("error", "already-voted"), errorAlreadyVoted).getString();
+        errorNoVoteRunning = check(messages.node("error", "no-vote-running"), errorNoVoteRunning).getString();
+        errorVoteToRestartDisabled = check(messages.node("error", "vote-restart-disabled"), errorVoteToRestartDisabled).getString();
+        errorVoteAlreadyRunning = check(messages.node("error", "vote-already-running"), errorVoteAlreadyRunning).getString();
+        errorNotOnlineLongEnough = check(messages.node("error", "not-online-long-enough"), errorNotOnlineLongEnough).getString();
+        errorMinPlayers = check(messages.node("error", "min-players"), errorMinPlayers).getString();
+        errorAlreadyRestarting = check(messages.node("error", "already-restarting"), errorAlreadyRestarting).getString();
+        errorWaitTime = check(messages.node("error", "wait-time"), errorWaitTime).getString();
+        errorNoPermission = check(messages.node("error", "no-permission"), errorNoPermission).getString();
+        errorNoTaskScheduled = check(messages.node("error", "no-task-scheduled"), errorNoTaskScheduled).getString();
+        errorTookTooLong = check(messages.node("error", "took-too-long"), errorTookTooLong).getString();
+        errorInvalidTimescale = check(messages.node("error", "invalid-time-scale"), errorInvalidTimescale).getString();
+        errorNothingToConfirm = check(messages.node("error", "nothing-to-confirm"), errorNothingToConfirm).getString();
 
         //general
-        restartCancel = check(messages.getNode("general", "restart-canceled"), restartCancel).getString();
-        restartPassed = check(messages.getNode("general", "restart-passed"), restartPassed).getString();
-        restartVoteNotEnoughVoted = check(messages.getNode("general", "not-enough-voted"), restartVoteNotEnoughVoted).getString();
-        votedYes = check(messages.getNode("general", "voted-yes"), votedYes).getString();
-        votedNo = check(messages.getNode("general", "voted-no"), votedNo).getString();
-        restartMessageWithReason = check(messages.getNode("general", "restart-with-reason"), restartMessageWithReason).getString();
-        restartMessageWithoutReason = check(messages.getNode("general", "restart-no-reason"), restartMessageWithoutReason).getString();
-        restartFormatMessage = check(messages.getNode("general", "restart-format"), restartFormatMessage).getString();
-        restartConfirm = check(messages.getNode("general", "restart-confirmed"), restartConfirm).getString();
-        restartConfirmMessage = check(messages.getNode("general", "confirm-restart"), restartConfirmMessage).getString();
+        restartCancel = check(messages.node("general", "restart-canceled"), restartCancel).getString();
+        restartPassed = check(messages.node("general", "restart-passed"), restartPassed).getString();
+        restartVoteNotEnoughVoted = check(messages.node("general", "not-enough-voted"), restartVoteNotEnoughVoted).getString();
+        votedYes = check(messages.node("general", "voted-yes"), votedYes).getString();
+        votedNo = check(messages.node("general", "voted-no"), votedNo).getString();
+        restartMessageWithReason = check(messages.node("general", "restart-with-reason"), restartMessageWithReason).getString();
+        restartMessageWithoutReason = check(messages.node("general", "restart-no-reason"), restartMessageWithoutReason).getString();
+        restartFormatMessage = check(messages.node("general", "restart-format"), restartFormatMessage).getString();
+        restartConfirm = check(messages.node("general", "restart-confirmed"), restartConfirm).getString();
+        restartConfirmMessage = check(messages.node("general", "confirm-restart"), restartConfirmMessage).getString();
 
         //vote notification
-        restartVoteBroadcast = checkList(messages.getNode("vote-notification", "after-command"), restartVoteBroadcastDefault).getList(TypeToken.of(String.class));
-        restartVoteBroadcastOnLogin = checkList(messages.getNode("vote-notification", "on-login"), restartVoteBroadcastOnLoginDefault).getList(TypeToken.of(String.class));
+        restartVoteBroadcast = checkList(messages.node("vote-notification", "after-command"), restartVoteBroadcastDefault).getList(String.class);
+        restartVoteBroadcastOnLogin = checkList(messages.node("vote-notification", "on-login"), restartVoteBroadcastOnLoginDefault).getList(String.class);
 
         //restart notification
-        restartNotificationMinutes = check(messages.getNode("restart-notification", "more-than-1-minute-remaining"), restartNotificationMinutes).getString();
-        restartNotificationMinute = check(messages.getNode("restart-notification", "only-1-minute-remaining"), restartNotificationMinute).getString();
-        restartNotificationSeconds = check(messages.getNode("restart-notification", "less-than-1-minute-remaining"), restartNotificationSeconds).getString();
+        restartNotificationMinutes = check(messages.node("restart-notification", "more-than-1-minute-remaining"), restartNotificationMinutes).getString();
+        restartNotificationMinute = check(messages.node("restart-notification", "only-1-minute-remaining"), restartNotificationMinute).getString();
+        restartNotificationSeconds = check(messages.node("restart-notification", "less-than-1-minute-remaining"), restartNotificationSeconds).getString();
 
         //help
-        helpHeader = check(messages.getNode("help", "header"), helpHeader).getString();
-        helpHelp = check(messages.getNode("help", "help"), helpHelp).getString();
-        helpNow = check(messages.getNode("help", "now"), helpNow).getString();
-        helpStart = check(messages.getNode("help", "start"), helpStart).getString();
-        helpCancel = check(messages.getNode("help", "cancel"), helpCancel).getString();
-        helpVote = check(messages.getNode("help", "vote"), helpVote).getString();
-        helpTime = check(messages.getNode("help", "time"), helpTime).getString();
-        helpVoteYea = check(messages.getNode("help", "vote-yes"), helpVoteYea).getString();
-        helpVoteNo = check(messages.getNode("help", "vote-no"), helpVoteNo).getString();
+        helpHeader = check(messages.node("help", "header"), helpHeader).getString();
+        helpHelp = check(messages.node("help", "help"), helpHelp).getString();
+        helpNow = check(messages.node("help", "now"), helpNow).getString();
+        helpStart = check(messages.node("help", "start"), helpStart).getString();
+        helpCancel = check(messages.node("help", "cancel"), helpCancel).getString();
+        helpVote = check(messages.node("help", "vote"), helpVote).getString();
+        helpTime = check(messages.node("help", "time"), helpTime).getString();
+        helpVoteYea = check(messages.node("help", "vote-yes"), helpVoteYea).getString();
+        helpVoteNo = check(messages.node("help", "vote-no"), helpVoteNo).getString();
 
         messageLoader.save(messages);
     }
@@ -177,27 +176,30 @@ public class Messages {
         }
         String[] assets = {
                 "messages_EN.conf",
-                "messages_RU.conf"
+                "messages_RU.conf",
+                "messages_ZH-CN.conf"
         };
         for (String asset : assets) {
             if (!Files.exists(plugin.configDir.resolve("localization/" +asset))) {
-                if (Sponge.getAssetManager().getAsset(plugin, asset).isPresent()) {
-                    Sponge.getAssetManager().getAsset(plugin, asset).get().copyToFile(plugin.configDir.resolve("localization/" +asset));
+                InputStream stream = Main.class.getClassLoader().getResourceAsStream(asset);
+                if (stream != null) {
+                    Files.copy(stream, plugin.configDir.resolve("localization/" +asset));
                 }
+
             }
         }
     }
 
-    private CommentedConfigurationNode check(CommentedConfigurationNode node, Object defaultValue) {
-        if (node.isVirtual()) {
-            node.setValue(defaultValue);
+    private CommentedConfigurationNode check(CommentedConfigurationNode node, Object defaultValue) throws SerializationException {
+        if (node.virtual()) {
+            node.set(defaultValue);
         }
         return node;
     }
 
-    private CommentedConfigurationNode checkList(CommentedConfigurationNode node, String[] defaultValue) {
-        if (node.isVirtual()) {
-            node.setValue(Arrays.asList(defaultValue));
+    private CommentedConfigurationNode checkList(CommentedConfigurationNode node, String[] defaultValue) throws SerializationException {
+        if (node.virtual()) {
+            node.set(Arrays.asList(defaultValue));
         }
         return node;
     }

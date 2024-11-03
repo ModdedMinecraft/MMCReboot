@@ -3,12 +3,12 @@ package net.moddedminecraft.mmcreboot.commands;
 import net.moddedminecraft.mmcreboot.Config.Config;
 import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Main;
-import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandExecutor;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.spec.CommandExecutor;
-import org.spongepowered.api.text.Text;
+import org.spongepowered.api.command.exception.CommandException;
+import org.spongepowered.api.command.parameter.CommandContext;
+import org.spongepowered.api.command.parameter.Parameter;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 
 import java.util.Optional;
 
@@ -22,31 +22,43 @@ public class RebootCMD implements CommandExecutor {
     }
 
     @Override
-    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        String timeValue = args.<String>getOne("h/m/s").get();
-        int timeAmount = args.<Integer>getOne("time").get();
-        Optional<String> reasonOP = args.getOne("reason");
+    public CommandResult execute(CommandContext context) throws CommandException {
+
+        Parameter.Value<String> formatParameter = Parameter.string().key("h/m/s").build();
+        Parameter.Value<Integer> timeParameter = Parameter.integerNumber().key("time").build();
+        Parameter.Value<String> reasonParameter = Parameter.string().key("reason").build();
+
+        final String format = context.requireOne(formatParameter);
+        final Integer time = context.requireOne(timeParameter);
+        final Optional<String> reasonOp = context.one(reasonParameter);
+
+        String name = "Console";
+
+        if (context.cause().root() instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) context.cause().root();
+            name = player.name();
+        }
+
         double restartTime;
 
-        plugin.reason = reasonOP.orElse(null);
+        plugin.reason = reasonOp.orElse(null);
 
-        switch (timeValue) {
+        switch (format) {
             case "h":
-                restartTime = timeAmount * 3600;
+                restartTime = time * 3600;
                 break;
             case "m":
-                restartTime = (timeAmount * 60) + 1;
+                restartTime = (time * 60) + 1;
                 break;
             case "s":
-                restartTime = timeAmount;
+                restartTime = time;
                 break;
             default:
-                plugin.sendMessage(src, Messages.getRestartFormatMessage());
-                src.sendMessage(Text.of());
+                plugin.sendMessage(context.cause().audience(), Messages.getRestartFormatMessage());
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorInvalidTimescale()));
         }
 
-        plugin.logger.info("[MMCReboot] " + src.getName() + " is setting a new restart time...");
+        plugin.logger.info("[MMCReboot] " + name + " is setting a new restart time...");
 
         if(plugin.tasksScheduled) {
             plugin.cancelTasks();
@@ -69,14 +81,14 @@ public class RebootCMD implements CommandExecutor {
         int minutes = (int)((timeLeft - hours * 3600) / 60);
         int seconds = (int)timeLeft % 60;
 
-        if (reasonOP.isPresent()) {
-            plugin.sendMessage(src, Messages.getRestartMessageWithReason()
+        if (reasonOp.isPresent()) {
+            plugin.sendMessage(context.cause().audience(), Messages.getRestartMessageWithReason()
                     .replace("%hours%", String.valueOf(hours))
                     .replace("%minutes%", String.valueOf(minutes))
                     .replace("%seconds%", String.valueOf(seconds)));
-            plugin.sendMessage(src, "&6" + plugin.reason);
+            plugin.sendMessage(context.cause().audience(), "&6" + plugin.reason);
         } else {
-            plugin.sendMessage(src, Messages.getRestartMessageWithoutReason()
+            plugin.sendMessage(context.cause().audience(), Messages.getRestartMessageWithoutReason()
                     .replace("%hours%", String.valueOf(hours))
                     .replace("%minutes%", String.valueOf(minutes))
                     .replace("%seconds%", String.valueOf(seconds)));

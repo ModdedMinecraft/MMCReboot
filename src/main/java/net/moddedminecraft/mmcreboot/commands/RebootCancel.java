@@ -2,11 +2,10 @@ package net.moddedminecraft.mmcreboot.commands;
 
 import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Main;
-import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandExecutor;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.command.exception.CommandException;
+import org.spongepowered.api.command.parameter.CommandContext;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -19,7 +18,7 @@ public class RebootCancel implements CommandExecutor {
     }
 
     @Override
-    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+    public CommandResult execute(CommandContext context) throws CommandException {
         plugin.voteCancel = true;
         Timer voteCancelimer = new Timer();
         voteCancelimer.schedule(new TimerTask() {
@@ -31,7 +30,7 @@ public class RebootCancel implements CommandExecutor {
         plugin.removeScoreboard();
         plugin.removeBossBar();
         plugin.isRestarting = false;
-        plugin.sendMessage(src, Messages.getRestartCancel());
+        plugin.sendMessage(context.cause().audience(), Messages.getRestartCancel());
         return CommandResult.success();
     }
 }

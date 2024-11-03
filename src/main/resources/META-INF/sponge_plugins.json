@@ -1,0 +1,41 @@
+{
+  "loader": {
+    "name": "java_plain",
+    "version": "1.0"
+  },
+  "license": "GPL-3.0",
+  "plugins": [
+    {
+      "id": "mmcreboot",
+      "name": "MMCReboot",
+      "entrypoint": "net.moddedminecraft.mmcreboot.Main",
+      "description": "A simple to use restart management plugin.",
+      "version": "3.0.0",
+      "branding": {},
+      "links": {
+        "source": "https://github.com/ModdedMinecraft/MMCReboot",
+        "issues": "https://github.com/ModdedMinecraft/MMCReboot/issues"
+      },
+      "contributors": [
+        {
+          "name": "Leelawd",
+          "description": "Lead Developer"
+        }
+      ],
+      "dependencies": [
+        {
+          "id": "localeapi",
+          "version": "2.6.0",
+          "load-order": "after",
+          "optional": false
+        },
+        {
+          "id": "spongeapi",
+          "version": "8.2.0",
+          "load-order": "after",
+          "optional": false
+        }
+      ]
+    }
+  ]
+}

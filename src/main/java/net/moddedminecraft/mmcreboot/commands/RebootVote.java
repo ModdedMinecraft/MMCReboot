@@ -1,19 +1,20 @@
 package net.moddedminecraft.mmcreboot.commands;
 
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.text.Component;
 import net.moddedminecraft.mmcreboot.Config.Config;
 import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Config.Permissions;
 import net.moddedminecraft.mmcreboot.Main;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandExecutor;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.spec.CommandExecutor;
-import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.command.exception.CommandException;
+import org.spongepowered.api.command.parameter.CommandContext;
+import org.spongepowered.api.command.parameter.Parameter;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.service.pagination.PaginationService;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.channel.MessageChannel;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.util.*;
 
@@ -25,57 +26,73 @@ public class RebootVote implements CommandExecutor {
     }
 
     @Override
-    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
-        Optional<String> optional = args.getOne("optional");
+    public CommandResult execute(CommandContext context) throws CommandException {
+        Parameter.Value<String> answerParameter = Parameter.string().key("answer").build();
+        final Optional<String> answerOp = context.one(answerParameter);
 
-        if (optional.isPresent()) {
-            String op = optional.get();
-            switch (op) {
+        Audience audience = context.cause().audience();
+        String playerName = "";
+        if (context.cause().root() instanceof ServerPlayer) {
+            ServerPlayer player = (ServerPlayer) context.cause().root();
+            playerName = player.name();
+        }
+
+        if (answerOp.isPresent()) {
+            String answer = answerOp.get();
+            switch (answer) {
                 case "on":
-                    if (src.hasPermission(Permissions.TOGGLE_VOTE)) {
+                    if (context.hasPermission(Permissions.TOGGLE_VOTE)) {
                         Config.voteEnabled = true;
-                        Config.config.getNode("voting", "enabled").setValue("true");
+                        try {
+                            Config.config.node("voting", "enabled").set("true");
+                        } catch (SerializationException e) {
+                            throw new RuntimeException(e);
+                        }
                         return CommandResult.success();
                     } else {
-                        return CommandResult.empty();
+                        return CommandResult.error(Component.text("You do not have permission to use this command"));
                     }
 
                 case "off":
-                    if (src.hasPermission(Permissions.TOGGLE_VOTE)) {
+                    if (context.hasPermission(Permissions.TOGGLE_VOTE)) {
                         Config.voteEnabled = false;
-                        Config.config.getNode("voting", "enabled").setValue("false");
+                        try {
+                            Config.config.node("voting", "enabled").set("false");
+                        } catch (SerializationException e) {
+                            throw new RuntimeException(e);
+                        }
                         return CommandResult.success();
                     } else {
-                        return CommandResult.empty();
+                        return CommandResult.error(Component.text("You do not have permission to use this command"));
                     }
 
                 case "yes":
-                    if (plugin.hasVoted.contains(src)) {
+                    if (plugin.hasVoted.contains(playerName)) {
                         throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyVoted()));
                     }
                     if (plugin.voteStarted) {
                         plugin.yesVotes += 1;
-                        if (src instanceof Player) {
-                            plugin.hasVoted.add((Player) src);
+                        if (context.cause().root() instanceof ServerPlayer) {
+                            plugin.hasVoted.add(playerName);
                         }
                         plugin.displayVotes();
-                        plugin.sendMessage(src, Messages.getVotedYes());
+                        plugin.sendMessage(audience, Messages.getVotedYes());
                         return CommandResult.success();
                     } else {
                         throw new CommandException(plugin.fromLegacy(Messages.getErrorNoVoteRunning()));
                     }
 
                 case "no":
-                    if (plugin.hasVoted.contains(src)) {
+                    if (plugin.hasVoted.contains(playerName)) {
                         throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyVoted()));
                     }
                     if (plugin.voteStarted) {
                         plugin.noVotes += 1;
-                        if (src instanceof Player) {
-                            plugin.hasVoted.add((Player) src);
+                        if (context.cause().root() instanceof ServerPlayer) {
+                            plugin.hasVoted.add(playerName);
                         }
                         plugin.displayVotes();
-                        plugin.sendMessage(src, Messages.getVotedNo());
+                        plugin.sendMessage(audience, Messages.getVotedNo());
                         return CommandResult.success();
 
                     } else {
@@ -83,8 +100,7 @@ public class RebootVote implements CommandExecutor {
                     }
 
                 default:
-                    return CommandResult.empty();
-                    //break;
+                    return CommandResult.error(Component.text("please enter a valid answer"));
 
             }
         } else {
@@ -97,22 +113,22 @@ public class RebootVote implements CommandExecutor {
             int hours = (int) (timeLeft / 3600);
             int minutes = (int) ((timeLeft - hours * 3600) / 60);
 
-            if (!src.hasPermission(Permissions.BYPASS) && !src.hasPermission(Permissions.COMMAND_VOTE)) {
+            if (!context.hasPermission(Permissions.BYPASS) && !context.hasPermission(Permissions.COMMAND_VOTE)) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorNoPermission()));
             }
-            if (!src.hasPermission(Permissions.BYPASS) && !Config.voteEnabled) {
+            if (!context.hasPermission(Permissions.BYPASS) && !Config.voteEnabled) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorVoteToRestartDisabled()));
             }
-            if (plugin.hasVoted.contains(src)) {
+            if (plugin.hasVoted.contains(playerName)) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorAlreadyVoted()));
             }
             if (plugin.voteStarted) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorVoteAlreadyRunning()));
             }
-            if (!src.hasPermission(Permissions.BYPASS) && plugin.justStarted) {
+            if (!context.hasPermission(Permissions.BYPASS) && plugin.justStarted) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorNotOnlineLongEnough()));
             }
-            if (!src.hasPermission(Permissions.BYPASS) && Sponge.getServer().getOnlinePlayers().size() < Config.timerMinplayers) {
+            if (!context.hasPermission(Permissions.BYPASS) && Sponge.server().onlinePlayers().size() < Config.timerMinplayers) {
                 throw new CommandException(plugin.fromLegacy(Messages.getErrorMinPlayers()));
             }
             if (plugin.isRestarting && timeLeft != 0 && (hours == 0 && minutes <= 10)) {
@@ -123,11 +139,10 @@ public class RebootVote implements CommandExecutor {
             }
 
 
-            if (src instanceof Player) {
-                Player player = (Player) src;
+            if (context.cause().root() instanceof ServerPlayer) {
                 plugin.voteStarted = true;
                 plugin.voteCancel = false;
-                plugin.hasVoted.add(player);
+                plugin.hasVoted.add(playerName);
                 plugin.yesVotes += 1;
                 plugin.noVotes = 0;
                 plugin.voteSeconds = 90;
@@ -137,12 +152,12 @@ public class RebootVote implements CommandExecutor {
                 plugin.displayVotes();
             }
 
-            PaginationService paginationService = Sponge.getServiceManager().provide(PaginationService.class).get();
-            List<Text> contents = new ArrayList<>();
+            PaginationService paginationService = Sponge.serviceProvider().provide(PaginationService.class).get();
+            List<Component> contents = new ArrayList<>();
             List<String> broadcast = Messages.getRestartVoteBroadcast();
             if (broadcast != null) {
                 for (String line : broadcast) {
-                    String checkLine = line.replace("%playername$", src.getName()).replace("%config.timerminplayers%", String.valueOf(Config.timerMinplayers));
+                    String checkLine = line.replace("%playername$", playerName).replace("%config.timerminplayers%", String.valueOf(Config.timerMinplayers));
                     contents.add(plugin.fromLegacy(checkLine));
                 }
             }
@@ -151,14 +166,14 @@ public class RebootVote implements CommandExecutor {
                 paginationService.builder()
                         .title(plugin.fromLegacy("Restart"))
                         .contents(contents)
-                        .padding(Text.of("="))
-                        .sendTo(MessageChannel.TO_ALL.getMembers());
+                        .padding(Component.text("="))
+                        .sendTo(Sponge.server().broadcastAudience());
             }
 
             Timer voteTimer = new Timer();
             voteTimer.schedule(new TimerTask() {
                 public void run() {
-                    int Online = Sponge.getServer().getOnlinePlayers().size();
+                    int Online = Sponge.server().onlinePlayers().size();
                     int percentage = plugin.yesVotes/Online *100;
 
                     boolean yesAboveNo = plugin.yesVotes > plugin.noVotes;

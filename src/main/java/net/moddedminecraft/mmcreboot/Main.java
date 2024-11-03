@@ -1,78 +1,69 @@
 package net.moddedminecraft.mmcreboot;
 
-import com.flowpowered.math.vector.Vector3d;
 import com.google.inject.Inject;
+import net.kyori.adventure.audience.Audience;
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.title.Title;
 import net.moddedminecraft.mmcreboot.Config.Config;
 import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Config.Permissions;
-import net.moddedminecraft.mmcreboot.Tasks.ShutdownTask;
 import net.moddedminecraft.mmcreboot.commands.*;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import org.slf4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.boss.BossBarColors;
-import org.spongepowered.api.boss.BossBarOverlays;
-import org.spongepowered.api.boss.ServerBossBar;
-import org.spongepowered.api.command.CommandManager;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.GenericArguments;
-import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.command.Command;
+import org.spongepowered.api.command.exception.CommandException;
+import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.DefaultConfig;
-import org.spongepowered.api.effect.sound.SoundType;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.game.GameReloadEvent;
-import org.spongepowered.api.event.game.state.GameInitializationEvent;
-import org.spongepowered.api.event.game.state.GameStartedServerEvent;
-import org.spongepowered.api.event.game.state.GameStoppingEvent;
-import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.event.lifecycle.*;
+import org.spongepowered.api.scheduler.ScheduledTaskFuture;
 import org.spongepowered.api.scoreboard.Scoreboard;
-import org.spongepowered.api.scoreboard.critieria.Criteria;
+import org.spongepowered.api.scoreboard.criteria.Criteria;
 import org.spongepowered.api.scoreboard.displayslot.DisplaySlots;
 import org.spongepowered.api.scoreboard.objective.Objective;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.chat.ChatTypes;
-import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.serializer.TextSerializers;
-import org.spongepowered.api.text.title.Title;
-import org.spongepowered.api.world.World;
+import org.spongepowered.plugin.PluginContainer;
+import org.spongepowered.plugin.builtin.jvm.Plugin;
+import sawfowl.localeapi.api.TextUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Plugin(id = "mmcreboot", name = "MMCReboot", version = "2.3.6", authors = {"Leelawd93"})
+@Plugin("mmcreboot")
 public class Main {
 
-    @Inject
-    public Logger logger;
-
-    @Inject
-    @ConfigDir(sharedRoot = false)
-    public Path configDir;
+    public static final Logger logger = LogManager.getLogger("MCReboot");
 
     @Inject
     @DefaultConfig(sharedRoot = false)
     public Path defaultConf;
 
     @Inject
-    @DefaultConfig(sharedRoot = false)
-    public File defaultConfFile;
+    @ConfigDir(sharedRoot = false)
+    public Path configDir;
 
     public boolean voteCancel = false;
     public boolean cdTimer = false;
     public boolean voteStarted = false;
     public int yesVotes = 0;
     public int noVotes = 0;
-    public ArrayList<Player> hasVoted = new ArrayList<Player>();
-    public static ArrayList<Integer> realTimeTimes = new ArrayList<Integer>();
+    public ArrayList<String> hasVoted = new ArrayList<>();
+    public static ArrayList<Integer> realTimeTimes = new ArrayList<>();
 
     public int voteSeconds;
     public String reason;
@@ -85,34 +76,38 @@ public class Main {
     public boolean tasksScheduled = false;
     public double nextRealTimeRestart;
 
-    // Timers
-    private ArrayList<Timer> warningTimers = new ArrayList<Timer>();
-    private Timer rebootTimer;
-    private Timer justStartedTimer;
+    // Timers & Tasks
+    private final ArrayList<Timer> warningTimers = new ArrayList<Timer>();
+    ScheduledTaskFuture<?> justStartedTimer;
+    ScheduledTaskFuture<?> scoreboardRefreshTask;
+    ScheduledTaskFuture<?> reduceVoteTask;
+    ScheduledTaskFuture<?> checkRealTimeRestartTask;
+    ScheduledTaskFuture<?> checkTPSForRestartTask;
 
     private boolean playSoundNow = false;
-    private Vector3d soundLoc;
 
     private Config config;
     private Messages messages;
 
-    private CommandManager cmdManager = Sponge.getCommandManager();
-
     private Scoreboard board;
+    private BossBar bar;
 
-    private ServerBossBar bar;
+    public final PluginContainer container;
 
-    @Listener
-    public void Init(GameInitializationEvent event) throws IOException, ObjectMappingException {
-        Sponge.getEventManager().registerListeners(this, new EventListener(this));
-        this.config = new Config(this);
-        this.messages = new Messages(this);
-        loadCommands();
+    @Inject
+    public Main(final PluginContainer container) {
+        this.container = container;
     }
 
     @Listener
-    public void onServerStart(GameStartedServerEvent event) throws IOException {
-        soundLoc = new Vector3d(0, 64, 0);
+    public void onServerAboutStart(ConstructPluginEvent event) throws IOException {
+        Sponge.eventManager().registerListeners(container, new EventListener(this));
+        this.config = new Config(this);
+        this.messages = new Messages(this);
+    }
+
+    @Listener
+    public void onServerStart(StartedEngineEvent<Server> event) {
         if(Config.restartType.equalsIgnoreCase("fixed")) {
             logger.info("[MMCReboot] Using fixed restart scheduler");
             scheduleTasks();
@@ -131,41 +126,36 @@ public class Main {
         }
 
         if (Config.voteEnabled) {
-            justStartedTimer = new Timer();
-            this.justStartedTimer.schedule(new TimerTask() {
-                public void run() {
-                    justStarted = false;
-                }
-            }, (long)(Config.timerStartvote * 60 * 1000));
+            justStartedTimer = Sponge.asyncScheduler().executor(container).schedule(() -> {
+                justStarted = false;
+            }, (long) Config.timerStartvote * 60 * 1000, TimeUnit.SECONDS);
         }
 
-
-        Sponge.getScheduler().createTaskBuilder().execute(this::action).delay(250, TimeUnit.MILLISECONDS).interval(500,TimeUnit.MILLISECONDS).async().name("mmcreboot-a-sendAction").submit(this);
-
-        Sponge.getScheduler().createTaskBuilder().execute(this::reduceVote).interval(1, TimeUnit.SECONDS).async().name("mmcreboot-a-reduceVoteCount").submit(this);
-
-        Sponge.getScheduler().createTaskBuilder().execute(this::checkRealTimeRestart).delay(1, TimeUnit.HOURS).interval(15 ,TimeUnit.MINUTES).async().name("mmcreboot-a-checkRealTimeRestart").submit(this);
-
-        Sponge.getScheduler().createTaskBuilder().execute(this::CheckTPSForRestart).delay(Config.tpsCheckDelay, TimeUnit.MINUTES).interval(30, TimeUnit.SECONDS).async().name("mmcreboot-a-checkTPSForRestart").submit(this);
-
-       /* metrics.addCustomChart(new Metrics.SimplePie("restart_type") {
-            @Override
-            public String getValue() {
-                return Config.restartType;
-            }
-        });*/
+        scoreboardRefreshTask = Sponge.asyncScheduler().executor(container).scheduleWithFixedDelay(this::action,250, 500, TimeUnit.MILLISECONDS);
+        reduceVoteTask = Sponge.asyncScheduler().executor(container).scheduleWithFixedDelay(this::reduceVote,1, 1, TimeUnit.SECONDS);
+        checkRealTimeRestartTask = Sponge.asyncScheduler().executor(container).scheduleWithFixedDelay(this::checkRealTimeRestart,15, 15, TimeUnit.MINUTES);
+        checkTPSForRestartTask = Sponge.asyncScheduler().executor(container).scheduleWithFixedDelay(this::CheckTPSForRestart,Config.tpsCheckDelay, 1, TimeUnit.MINUTES);
 
         logger.info("MMCReboot Loaded");
     }
-
     @Listener
-    public void onServerStop(GameStoppingEvent event) throws IOException {
+    public void onGameStop(StoppedGameEvent event) {
+        removeScoreboard();
+        removeBossBar();
         cancelTasks();
-        logger.info("MMCReboot Disabled");
+        scoreboardRefreshTask.task().cancel();
+        reduceVoteTask.task().cancel();
+        checkRealTimeRestartTask.task().cancel();
+        checkTPSForRestartTask.task().cancel();
     }
 
     @Listener
-    public void onPluginReload(GameReloadEvent event) throws IOException, ObjectMappingException {
+    public void onServerStop(StoppingEngineEvent<Server> event) {
+        logger.info("MMCReboot Stopped");
+    }
+
+    @Listener
+    public void onPluginReload(RefreshGameEvent event) throws IOException {
         cancelTasks();
         removeScoreboard();
         removeBossBar();
@@ -190,79 +180,75 @@ public class Main {
         }
     }
 
-    private void loadCommands() {
+    @Listener
+    public void onRegisterSpongeCommand(final RegisterCommandEvent<Command.Parameterized> event) {
+
         // /Reboot help
-        CommandSpec help = CommandSpec.builder()
-                .description(Text.of("List of commands usable to the player"))
+        Command.Parameterized rebootHelp = Command.builder()
+                .shortDescription(Component.text("List of commands usable to the player"))
                 .executor(new RebootHelp(this))
                 .build();
+
         // /Reboot vote
-        CommandSpec vote = CommandSpec.builder()
-                .description(Text.of("Submit a vote to reboot the server"))
+        Command.Parameterized rebootVote = Command.builder()
+                .shortDescription(Component.text("Submit a vote to reboot the server"))
                 .executor(new RebootVote(this))
-                .arguments(GenericArguments.optional(GenericArguments.remainingJoinedStrings(Text.of("optional"))))
+                .addParameters(Parameter.remainingJoinedStrings().key("answer").optional().build())
                 .build();
+
         // /Reboot cancel
-        CommandSpec cancel = CommandSpec.builder()
-                .description(Text.of("Cancel the current timed reboot"))
+        Command.Parameterized rebootCancel = Command.builder()
+                .shortDescription(Component.text("Cancel the current timed reboot"))
                 .permission(Permissions.COMMAND_CANCEL)
                 .executor(new RebootCancel(this))
                 .build();
 
         // /Reboot time
-        CommandSpec time = CommandSpec.builder()
-                .description(Text.of("Get the time remaining until the next restart"))
+        Command.Parameterized rebootTime = Command.builder()
+                .shortDescription(Component.text("Get the time remaining until the next restart"))
                 .permission(Permissions.COMMAND_TIME)
                 .executor(new RebootTime(this))
                 .build();
 
         // /Reboot confirm
-        CommandSpec confirm = CommandSpec.builder()
-                .description(Text.of("Reboot the server immediately"))
+        Command.Parameterized rebootConfirm = Command.builder()
+                .shortDescription(Component.text("Reboot the server immediately"))
                 .permission(Permissions.COMMAND_NOW)
                 .executor(new RebootConfirm(this))
                 .build();
         // /Reboot now
-        CommandSpec now = CommandSpec.builder()
-                .description(Text.of("Reboot the server immediately"))
+        Command.Parameterized rebootNow = Command.builder()
+                .shortDescription(Component.text("Reboot the server immediately"))
                 .permission(Permissions.COMMAND_NOW)
                 .executor(new RebootNow(this))
                 .build();
 
-        Map<String, String> choices = new HashMap<String, String>() {
-            {
-                put("h", "h");
-                put("m", "m");
-                put("s", "s");
-            }
-        };
-
         // /Reboot start h/m/s time reason
-        CommandSpec start = CommandSpec.builder()
-                .description(Text.of("Reboot base command"))
+        Command.Parameterized rebootStart = Command.builder()
+                .shortDescription(Component.text("Reboot base command"))
                 .permission(Permissions.COMMAND_START)
-                .arguments(GenericArguments.choices(Text.of("h/m/s"), choices),
-                        GenericArguments.integer(Text.of("time")),
-                        GenericArguments.optional(GenericArguments.remainingJoinedStrings(Text.of("reason"))))
+                .addParameters(Parameter.choices("h", "m", "s").key("h/m/s").build(),
+                        Parameter.integerNumber().key("time").build(),
+                        Parameter.remainingJoinedStrings().key("reason").optional().build())
                 .executor(new RebootCMD(this))
                 .build();
 
-        CommandSpec rbootmain = CommandSpec.builder()
-                .description(Text.of("Reboot base command"))
-                .child(start, "start")
-                .child(now, "now")
-                .child(confirm, "confirm")
-                .child(time, "time")
-                .child(cancel, "cancel")
-                .child(vote, "vote")
-                .child(help, "help")
-                .build();
+        event.register(this.container,Command.builder()
+                .shortDescription(Component.text("Reboot base command"))
+                .addChild(rebootStart, "start")
+                .addChild(rebootNow, "now")
+                .addChild(rebootConfirm, "confirm")
+                .addChild(rebootTime, "time")
+                .addChild(rebootCancel, "cancel")
+                .addChild(rebootVote, "vote")
+                .addChild(rebootHelp, "help")
+                .build(), "reboot", "mmcreboot", "restart"
+        );
 
-        cmdManager.register(this, rbootmain, "reboot", "restart");
     }
 
     public Double getTPS() {
-        return Sponge.getServer().getTicksPerSecond();
+        return Sponge.server().ticksPerSecond();
     }
 
     public boolean getTPSRestarting() {
@@ -334,6 +320,40 @@ public class Main {
         }
     }
 
+    Runnable shutdownCmdTasks = () -> {
+        cancelTasks();
+        removeScoreboard();
+        removeBossBar();
+        useCommandOnRestart();
+    };
+
+    Runnable shutdownRunnable = () -> {
+        if (getTPSRestarting()) {
+            if (getTPS() >= Config.tpsMinimum && Config.tpsRestartCancel) {
+                cancelTasks();
+                removeScoreboard();
+                removeBossBar();
+                isRestarting = false;
+                setTPSRestarting(false);
+                if (!Config.tpsRestartCancelMsg.isEmpty()) {
+                    broadcastMessage("&f[&6Restart&f] " + Config.tpsRestartCancelMsg);
+                }
+            } else if (getTPS() < Config.tpsMinimum) {
+                if (Config.restartUseCommand) {
+                    shutdownCmdTasks.run();
+                } else {
+                    stopServer();
+                }
+            }
+        } else {
+            if (Config.restartUseCommand) {
+                shutdownCmdTasks.run();
+            } else {
+                stopServer();
+            }
+        }
+    };
+
     public void scheduleRealTimeRestart() {
         cancelTasks();
         nextRealTimeRestart = getNextRealTimeFromConfig();
@@ -341,8 +361,9 @@ public class Main {
         if (Config.timerBroadcast != null) {
             warningMessages(rInterval);
         }
-        rebootTimer = new Timer();
-        rebootTimer.schedule(new ShutdownTask(this), (long) (nextRealTimeRestart * 1000.0));
+        int roundedInterval = Math.toIntExact(Math.round(rInterval));
+
+        Sponge.asyncScheduler().executor(container).schedule(shutdownRunnable, roundedInterval, TimeUnit.SECONDS);
 
         logger.info("[MMCReboot] RebootCMD scheduled for " + (long)(nextRealTimeRestart) + " seconds from now!");
         tasksScheduled = true;
@@ -353,17 +374,15 @@ public class Main {
     public void scheduleTasks() {
         boolean wasTPSRestarting = getTPSRestarting();
         cancelTasks();
-        if (wasTPSRestarting) {
-            setTPSRestarting(true);
-        } else {
-            setTPSRestarting(false);
-        }
+        setTPSRestarting(wasTPSRestarting);
         double rInterval = Config.restartInterval * 3600;
         if (Config.timerBroadcast != null) {
             warningMessages(rInterval);
         }
-        rebootTimer = new Timer();
-        rebootTimer.schedule(new ShutdownTask(this), (long) (Config.restartInterval * 3600000.0));
+
+        int roundedInterval = Math.toIntExact(Math.round(rInterval));
+
+        Sponge.asyncScheduler().executor(container).schedule(shutdownRunnable, roundedInterval, TimeUnit.SECONDS);
 
         logger.info("[MMCReboot] RebootCMD scheduled for " + (long)(Config.restartInterval  * 3600.0) + " seconds from now!");
         tasksScheduled = true;
@@ -383,17 +402,19 @@ public class Main {
                         int minutes = (int) ((timeLeft - hours * 3600) / 60);
                         int seconds = (int) timeLeft % 60;
 
+                        logger.info("Debug: Restart Time = " + hours + " : " + minutes + " : " + seconds);
+
                         NumberFormat formatter = new DecimalFormat("00");
                         String s = formatter.format(seconds);
                         if (Config.timerUseChat) {
                             if (minutes > 1) {
-                                String message = Messages.getRestartNotificationMinutes().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
+                                String message = Messages.getRestartNotificationMinutes().replace("%minutes%", "" + minutes).replace("%seconds%", s);
                                 broadcastMessage("&f[&6Restart&f] " + message);
                             } else if (minutes == 1) {
-                                String message = Messages.getRestartNotificationMinute().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
+                                String message = Messages.getRestartNotificationMinute().replace("%minutes%", "" + minutes).replace("%seconds%", s);
                                 broadcastMessage("&f[&6Restart&f] " + message);
-                            } else if (minutes < 1) {
-                                String message = Messages.getRestartNotificationSeconds().replace("%minutes%", "" + minutes).replace("%seconds%", "" + s);
+                            } else {
+                                String message = Messages.getRestartNotificationSeconds().replace("%minutes%", "" + minutes).replace("%seconds%", s);
                                 broadcastMessage("&f[&6Restart&f] " + message);
                             }
                         }
@@ -401,30 +422,25 @@ public class Main {
                         if (!playSoundNow && Config.playSoundFirstTime >= aTimerBroadcast) {
                             playSoundNow = true;
                         }
-                        for (World w : Sponge.getServer().getWorlds()) {
+
+                        Component titleString = fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", s));
+
+                        for (Player p : Sponge.server().onlinePlayers()) {
                             if (Config.playSoundEnabled && playSoundNow) {
-                                Optional<SoundType> sound = Sponge.getGame().getRegistry().getType(SoundType.class, Config.playSoundString);
-                                SoundType playSound;
-                                if (sound.isPresent()) {
-                                    playSound = sound.get();
-                                } else {
-                                    playSound = Sponge.getGame().getRegistry().getType(SoundType.class, "block.note.pling").get();
-                                }
-                                w.playSound(playSound, soundLoc, 4000);
+                                p.playSound(Sound.sound(Key.key("block.note_block.pling"), Sound.Source.MUSIC, 1f, 1f));
                             }
-                        }
-                        for (Player p : Sponge.getServer().getOnlinePlayers()) {
                             if (Config.titleEnabled) {
+                                Title title;
                                 if (reason != null) {
-                                    p.sendTitle(Title.builder()
-                                            .title(fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", "" + s)))
-                                            .subtitle(fromLegacy(reason))
-                                            .fadeIn(10).fadeOut(10).stay(Config.titleStayTime * 20).build());
+                                    title = Title.title(titleString,
+                                            fromLegacy(reason),
+                                            Title.Times.times(Duration.ofSeconds(1), Duration.ofSeconds(Config.titleStayTime), Duration.ofSeconds(1)));
                                 } else {
-                                    p.sendTitle(Title.builder()
-                                            .subtitle(fromLegacy(Config.titleMessage.replace("{hours}", "" + hours).replace("{minutes}", "" + minutes).replace("{seconds}", "" + s)))
-                                            .fadeIn(10).fadeOut(10).stay(Config.titleStayTime * 20).build());
+                                    title = Title.title(titleString,
+                                            Component.empty(),
+                                            Title.Times.times(Duration.ofSeconds(1), Duration.ofSeconds(Config.titleStayTime), Duration.ofSeconds(1)));
                                 }
+                                p.showTitle(title);
                             }
                         }
                         if (reason != null) {
@@ -441,10 +457,6 @@ public class Main {
     public void cancelTasks() {
         for (Timer warningTimer : warningTimers) warningTimer.cancel();
         warningTimers.clear();
-        if(rebootTimer != null) {
-            rebootTimer.cancel();
-        }
-        rebootTimer = new Timer();
         tasksScheduled = false;
         isRestarting = false;
         TPSRestarting = false;
@@ -458,11 +470,17 @@ public class Main {
         broadcastMessage("&cServer is restarting, we'll be right back!");
         try {
             if (Config.kickmessage.isEmpty()) {
-                Sponge.getServer().getOnlinePlayers().forEach(Player::kick);
+                Sponge.server().onlinePlayers().forEach(ServerPlayer::kick);
             } else {
-                Sponge.getServer().getOnlinePlayers().forEach(player -> player.kick(fromLegacy(Config.kickmessage)));
+                Sponge.server().onlinePlayers().forEach(ServerPlayer -> ServerPlayer.kick(fromLegacy(Config.kickmessage)));
             }
-            Sponge.getScheduler().createTaskBuilder().execute(this::shutdown).delay(1, TimeUnit.SECONDS).name("mmcreboot-s-shutdown").submit(this);
+            Sponge.asyncScheduler().executor(container).schedule(() -> {
+                try {
+                    shutdown();
+                } catch (CommandException e) {
+                    throw new RuntimeException(e);
+                }
+            }, 1, TimeUnit.SECONDS);
         } catch (Exception e) {
             logger.info("[MMCReboot] Something went wrong while saving & stopping!");
             logger.info("Exception: " + e);
@@ -470,9 +488,9 @@ public class Main {
         }
     }
 
-    public void shutdown() {
-        Sponge.getCommandManager().process(Sponge.getServer().getConsole(), "save-all");
-        Sponge.getServer().shutdown();
+    public void shutdown() throws CommandException {
+        Sponge.server().commandManager().process(Sponge.systemSubject(), "save-all");
+        Sponge.server().shutdown();
     }
 
     public int getNextRealTimeFromConfig() {
@@ -514,7 +532,11 @@ public class Main {
         isRestarting = false;
         List<String> cmds = Config.restartCommands;
         for (String cmd : cmds) {
-            Sponge.getCommandManager().process(Sponge.getServer().getConsole(), cmd.replace("/", ""));
+            try {
+                Sponge.server().commandManager().process(Sponge.systemSubject(), cmd.replace("/", ""));
+            } catch (CommandException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -532,31 +554,31 @@ public class Main {
         String s = formatter.format(seconds);
 
         board = Scoreboard.builder().build();
-        Objective obj = Objective.builder().name("restart").criterion(Criteria.DUMMY).displayName(Text.of(Messages.getSidebarRestartTimerTitle())).build();
+        Objective obj = Objective.builder().name("restart").criterion(Criteria.DUMMY).displayName(fromLegacy(Messages.getSidebarRestartTimerTitle())).build();
 
         board.addObjective(obj);
         board.updateDisplaySlot(obj, DisplaySlots.SIDEBAR);
 
-        obj.getOrCreateScore(Text.builder(Integer.toString(minutes) +":" + s).color(TextColors.GREEN).build()).setScore(0);
+        Component score = Component.text(minutes +":" + s).color(TextColor.color(0,255, 0));
+        obj.findOrCreateScore(score).setScore(0);
 
         int mSec = (minutes * 60);
         double val = ((mSec + seconds) * 100 / 300);
         float percent = (float)val / 100.0f;
 
-        Sponge.getServer().getOnlinePlayers().stream().filter(player -> minutes < 5 && hours == 0).forEach(player -> {
+        Sponge.server().onlinePlayers().stream().filter(player -> minutes < 5 && hours == 0).forEach(player -> {
             player.setScoreboard(board);
             if (Config.bossbarEnabled) {
                 if (bar == null) {
-                    bar = ServerBossBar.builder()
-                            .name(Text.of(Config.bossbarTitle.replace("{minutes}", Integer.toString(minutes)).replace("{seconds}", s)))
-                            .color(BossBarColors.GREEN)
-                            .overlay(BossBarOverlays.PROGRESS)
-                            .percent(percent)
-                            .build();
+                    bar = BossBar.bossBar(
+                            Component.text(Config.bossbarTitle.replace("{minutes}", Integer.toString(minutes)).replace("{seconds}", s)),
+                            percent,
+                            BossBar.Color.GREEN,
+                            BossBar.Overlay.PROGRESS);
                 } else {
-                    bar.setPercent(percent);
+                    bar.progress(percent);
                 }
-                bar.addPlayer(player);
+                player.showBossBar(bar);
             }
         });
     }
@@ -564,42 +586,44 @@ public class Main {
     public void displayVotes() {
         board = Scoreboard.builder().build();
 
-        Objective obj = Objective.builder().name("vote").criterion(Criteria.DUMMY).displayName(Text.of(Messages.getSidebarTitle())).build();
+        Objective obj = Objective.builder().name("vote").criterion(Criteria.DUMMY).displayName(fromLegacy(Messages.getSidebarTitle())).build();
 
         board.addObjective(obj);
         board.updateDisplaySlot(obj, DisplaySlots.SIDEBAR);
 
-        obj.getOrCreateScore(Text.builder(Messages.getSidebarYes() + ":").color(TextColors.GREEN).build()).setScore(yesVotes);
-        obj.getOrCreateScore(Text.builder(Messages.getSidebarNo() + ":").color(TextColors.AQUA).build()).setScore(noVotes);
-        obj.getOrCreateScore(Text.builder(Messages.getSidebarTimeleft() + ":").color(TextColors.RED).build()).setScore(getTimeLeftInSeconds());
+        obj.findOrCreateScore(fromLegacy(Messages.getSidebarYes() + ":").color(TextColor.color(0, 255, 0))).setScore(yesVotes);
+        obj.findOrCreateScore(fromLegacy(Messages.getSidebarNo() + ":").color(TextColor.color(51, 255, 255))).setScore(noVotes);
+        obj.findOrCreateScore(fromLegacy(Messages.getSidebarTimeleft() + ":").color(TextColor.color(255, 0, 0))).setScore(getTimeLeftInSeconds());
 
 
-        for (Player player : Sponge.getServer().getOnlinePlayers()) {
+        for (ServerPlayer player : Sponge.server().onlinePlayers()) {
             player.setScoreboard(board);
         }
     }
 
     public  void removeScoreboard() {
-        for (Player player : Sponge.getServer().getOnlinePlayers()) {
-            player.getScoreboard().clearSlot(DisplaySlots.SIDEBAR);
+        for (ServerPlayer player : Sponge.server().onlinePlayers()) {
+            player.scoreboard().clearSlot(DisplaySlots.SIDEBAR);
         }
     }
 
     public  void removeBossBar() {
         if (bar != null) {
-            bar.removePlayers(bar.getPlayers());
+            for (ServerPlayer player : Sponge.server().onlinePlayers()) {
+                player.hideBossBar(bar);
+            }
         }
     }
 
     public void broadcastMessage(String message) {
-        Sponge.getServer().getBroadcastChannel().send(fromLegacy(message), ChatTypes.SYSTEM);
+        Sponge.server().broadcastAudience().sendMessage(fromLegacy(message));
     }
 
-    public void sendMessage(CommandSource sender, String message) {
-        sender.sendMessage(fromLegacy(message));
+    public void sendMessage(Audience audience, String message) {
+        audience.sendMessage(fromLegacy(message));
     }
 
-    public Text fromLegacy(String legacy) {
-        return TextSerializers.FORMATTING_CODE.deserializeUnchecked(legacy);
+    public Component fromLegacy(String legacy) {
+        return TextUtils.deserializeLegacy(legacy);
     }
 }

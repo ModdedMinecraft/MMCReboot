@@ -3,11 +3,10 @@ package net.moddedminecraft.mmcreboot.commands;
 import net.moddedminecraft.mmcreboot.Config.Config;
 import net.moddedminecraft.mmcreboot.Config.Messages;
 import net.moddedminecraft.mmcreboot.Main;
-import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandExecutor;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.CommandSource;
-import org.spongepowered.api.command.args.CommandContext;
-import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.command.exception.CommandException;
+import org.spongepowered.api.command.parameter.CommandContext;
 
 public class RebootTime implements CommandExecutor {
 
@@ -17,7 +16,7 @@ public class RebootTime implements CommandExecutor {
     }
 
     @Override
-    public CommandResult execute(CommandSource src, CommandContext args) throws CommandException {
+    public CommandResult execute(CommandContext context) throws CommandException {
         if(!plugin.tasksScheduled) {
             throw new CommandException(plugin.fromLegacy(Messages.getErrorNoTaskScheduled()));
         }
@@ -28,7 +27,7 @@ public class RebootTime implements CommandExecutor {
             int minutes = (int)((timeLeft - hours * 3600) / 60);
             int seconds = (int)timeLeft % 60;
 
-            plugin.sendMessage(src, Messages.getRestartMessageWithoutReason()
+            plugin.sendMessage(context.cause().audience(), Messages.getRestartMessageWithoutReason()
                     .replace("%hours%", String.valueOf(hours))
                     .replace("%minutes%", String.valueOf(minutes))
                     .replace("%seconds%", String.valueOf(seconds)));
@@ -39,7 +38,7 @@ public class RebootTime implements CommandExecutor {
             int minutes = (int)((timeLeft - hours * 3600) / 60);
             int seconds = (int)timeLeft % 60;
 
-            plugin.sendMessage(src, Messages.getRestartMessageWithoutReason()
+            plugin.sendMessage(context.cause().audience(), Messages.getRestartMessageWithoutReason()
                     .replace("%hours%", String.valueOf(hours))
                     .replace("%minutes%", String.valueOf(minutes))
                     .replace("%seconds%", String.valueOf(seconds)));
